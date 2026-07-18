@@ -30,7 +30,11 @@
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "5fdfa1f4-3d57-4106-bf54-c61d6f100dff"
       }
-    }
+    },
+    "owner": "joshwebs1"
   }
 }
