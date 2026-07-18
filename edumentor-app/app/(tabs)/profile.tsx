@@ -2,21 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Avatar, Card, List, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { clearAuthSession, getAuthSession } from '../../services/authStorage';
 
 interface ProfileData {
   full_name: string;
   email: string;
   course: string;
   studentNo: string;
+  role: string;
 }
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData>({
-    full_name: 'Loading Student...',
+    full_name: 'Loading...',
     email: '',
     course: 'Information Technology',
-    studentNo: 'KP-2026-993F'
+    studentNo: 'Pending',
+    role: 'Student'
   });
 
   useEffect(() => {
@@ -24,19 +27,28 @@ export default function ProfileScreen() {
   }, []);
 
   const fetchProfile = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) {
+      router.replace('/(auth)/login');
+      return;
+    }
+
     try {
-      const res = await fetch('http://10.0.2.2:5000/api/profile');
+      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/profile', {
+        headers: { Authorization: `Bearer ${session.token}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setProfile({
-          full_name: data.full_name || 'Kwekwe Poly Student',
-          email: data.email || 'student@kwekwe.ac.zw',
+          full_name: data.full_name || session.user?.full_name || 'Kwekwe Poly Student',
+          email: data.email || session.user?.email || '',
           course: data.course || 'Information Technology',
-          studentNo: data.student_no || data.studentNo || 'KP-2026-993F'
+          studentNo: data.student_no || data.studentNo || session.user?.studentNo || 'Pending',
+          role: (data.role || session.user?.role || 'Student').toString()
         });
       }
     } catch (err) {
-      // Fallback
+      console.warn('Profile fetch failed', err);
     }
   };
 
@@ -46,7 +58,8 @@ export default function ProfileScreen() {
       {
         text: 'Logout',
         style: 'destructive',
-        onPress: () => {
+        onPress: async () => {
+          await clearAuthSession();
           router.replace('/(auth)/login');
         }
       }
@@ -63,7 +76,7 @@ export default function ProfileScreen() {
           labelStyle={{ fontWeight: 'bold' }} 
         />
         <Text style={styles.name}>{profile.full_name}</Text>
-        <Text style={styles.meta}>{profile.course} • Semester 5</Text>
+        <Text style={styles.meta}>{profile.role} • {profile.course}</Text>
       </View>
 
       <Card style={styles.card}>
@@ -71,6 +84,10 @@ export default function ProfileScreen() {
           <View style={styles.row}>
             <Text style={styles.label}>Institution</Text>
             <Text style={styles.val}>Kwekwe Poly</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Role</Text>
+            <Text style={styles.val}>{profile.role}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Student ID</Text>

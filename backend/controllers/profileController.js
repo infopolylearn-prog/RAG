@@ -1,25 +1,27 @@
 const { supabase } = require('../config/supabase');
+const { getProfile: getLocalProfile, upsertProfile } = require('../services/localUserStore');
 
 async function getProfile(req, res, next) {
     try {
         const userId = req.user ? req.user.id : null;
         
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', userId)
-            .maybeSingle();
+        let data = null;
 
-        if (error) throw error;
+        if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.includes('placeholder')) {
+            const { data: profileData, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            if (error) throw error;
+            data = profileData;
+        } else {
+            data = getLocalProfile(userId);
+        }
         
         if (!data) {
-            // Return default mock user profile if DB row is not created yet
-            return res.json({
-                full_name: req.user ? req.user.full_name : 'Kwekwe Poly Student',
-                email: req.user ? req.user.email : 'student@kwekwe.ac.zw',
-                course: 'Information Technology',
-                studentNo: 'KP-2026-993F'
-            });
+            return res.status(404).json({ error: 'Profile not found for this authenticated user.' });
         }
 
         res.json(data);
@@ -33,18 +35,26 @@ async function updateProfile(req, res, next) {
         const userId = req.user ? req.user.id : null;
         const { full_name, course, year_of_study } = req.body;
 
-        const { data, error } = await supabase
-            .from('profiles')
-            .upsert({
-                user_id: userId,
-                full_name,
-                course,
-                year_of_study
-            })
-            .select()
-            .single();
+        let data;
 
-        if (error) throw error;
+        if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.includes('placeholder')) {
+            const { data: profileData, error } = await supabase
+                .from('profiles')
+                .upsert({
+                    user_id: userId,
+                    full_name,
+                    course,
+                    year_of_study
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            data = profileData;
+        } else {
+            data = upsertProfile(userId, { full_name, course, year_of_study });
+        }
+
         res.json({ message: 'Profile updated successfully', profile: data });
     } catch (err) {
         next(err);

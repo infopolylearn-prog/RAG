@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { saveAuthSession } from '../../services/authStorage';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://10.0.2.2:5000/api/auth/register', {
+      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -36,24 +37,15 @@ export default function RegisterScreen() {
       setLoading(false);
 
       if (res.ok) {
-        Alert.alert('Success', 'Your account has been created via Supabase!');
+        await saveAuthSession({ token: data.token, user: data.user });
+        Alert.alert('Success', 'Your account was created successfully.');
         router.replace('/(tabs)/dashboard');
       } else {
         Alert.alert('Registration Error', data.error || 'Failed to create account.');
       }
     } catch (err: any) {
       setLoading(false);
-      // Fallback
-      Alert.alert(
-        'Offline Fallback',
-        'Backend service unreachable. Registering profile locally for simulation.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => router.replace('/(tabs)/dashboard')
-          }
-        ]
-      );
+      Alert.alert('Registration Error', err.message || 'Unable to reach the backend.');
     }
   };
 

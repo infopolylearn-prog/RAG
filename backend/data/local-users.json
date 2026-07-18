@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "id": "local-de826f640bf0",
+      "email": "persist@example.com",
+      "password": "Pass123!",
+      "full_name": "Persist User",
+      "role": "Student",
+      "studentNo": "KP-PERSIST-001"
+    }
+  ],
+  "profiles": [
+    {
+      "user_id": "local-de826f640bf0",
+      "full_name": "Persist User",
+      "email": "persist@example.com",
+      "course": "Information Technology",
+      "year_of_study": "2026",
+      "role": "Student",
+      "student_no": "KP-PERSIST-001"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { saveAuthSession } from '../../services/authStorage';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,8 +18,8 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // Connect to standalone production backend running on port 5000
-      const res = await fetch('http://10.0.2.2:5000/api/auth/login', {
+      // Connect to the deployed Render backend
+      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -31,24 +32,15 @@ export default function LoginScreen() {
       setLoading(false);
 
       if (res.ok) {
-        Alert.alert('Success', 'Logged in successfully against Supabase Auth!');
+        await saveAuthSession({ token: data.token, user: data.user });
+        Alert.alert('Success', 'Logged in successfully.');
         router.replace('/(tabs)/dashboard');
       } else {
         Alert.alert('Authentication Failure', data.error || 'Invalid credentials.');
       }
     } catch (err: any) {
       setLoading(false);
-      // Fallback redirect for visual/simulation flows if local network loopback is restricted on dev device
-      Alert.alert(
-        'Offline Fallback',
-        'Backend service unreachable. Bypassing login for simulation safety.',
-        [
-          {
-            text: 'Continue',
-            onPress: () => router.replace('/(tabs)/dashboard')
-          }
-        ]
-      );
+      Alert.alert('Sign-in Error', err.message || 'Unable to reach the backend.');
     }
   };
 

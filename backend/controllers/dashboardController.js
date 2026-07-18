@@ -2,7 +2,23 @@ const { supabase } = require('../config/supabase');
 
 async function getStudentDashboard(req, res, next) {
     try {
+        const role = req.user?.role || 'Student';
+        if (role === 'Lecturer' || role === 'Admin') {
+            return res.json({
+                role,
+                activeLecturesCount: 3,
+                studentEngagement: 92,
+                releasedDocsCount: 4,
+                recommendedTopics: [
+                    'Assignment Review',
+                    'Course Delivery',
+                    'Assessment Planning'
+                ]
+            });
+        }
+
         res.json({
+            role,
             streakDays: 5,
             activeCoursesCount: 2,
             queriesCount: 12,

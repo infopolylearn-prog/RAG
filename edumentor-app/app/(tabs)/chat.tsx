@@ -18,7 +18,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'ai',
-      text: 'I am your EduMentor AI Academic Tutor at Kwekwe Poly. Sourced directly from Gemini 2.0 with Groq Llama and OpenRouter fallback networks.',
+      text: 'I am your live EduMentor AI Academic Tutor. I am connected to the backend and will answer from the configured AI provider.',
       timestamp: '10:42 AM',
       model: 'gemini-2.0-flash'
     }
@@ -61,21 +61,6 @@ export default function ChatScreen() {
         model: response.model
       };
       setMessages(prev => [...prev, aiMsg]);
-
-      // POST to persist log dynamically
-      try {
-        fetch('http://10.0.2.2:5000/api/save_chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: 'student@kwekwe.ac.zw',
-            question: textToSend.trim(),
-            answer: response.answer,
-            subject: subject,
-            model: response.model
-          })
-        });
-      } catch (err) {}
 
     } catch (err: any) {
       const errorMsg: Message = {
@@ -120,7 +105,7 @@ export default function ChatScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>EduMentor Assistant</Text>
-        <Text style={styles.status}>● Kwekwe Poly AI • Secure Fallback Mode</Text>
+        <Text style={styles.status}>● Kwekwe Poly AI • Live Backend Mode</Text>
       </View>
 
       {/* Sub-tab segment switcher */}

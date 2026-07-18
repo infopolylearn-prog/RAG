@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Linking } from 'react-native';
-import { Text, Card, ProgressBar, Button, IconButton } from 'react-native-paper';
+import { Text, Card, ProgressBar, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { getAuthSession } from '../../services/authStorage';
 
 interface VideoTutorial {
   id: string | number;
@@ -14,15 +15,22 @@ interface VideoTutorial {
 export default function DashboardScreen() {
   const router = useRouter();
   const [tutorials, setTutorials] = useState<VideoTutorial[]>([]);
+  const [userRole, setUserRole] = useState('Student');
 
   useEffect(() => {
     fetchTutorials();
+    loadUserRole();
   }, []);
+
+  const loadUserRole = async () => {
+    const session = await getAuthSession();
+    setUserRole((session?.user?.role || 'Student').toString());
+  };
 
   const fetchTutorials = async () => {
     try {
       // Connect to local server IP or fallback list
-      const res = await fetch('http://10.0.2.2:5000/api/video_tutorials');
+      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/resources');
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
@@ -60,7 +68,7 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container}>
       {/* Premium IT Student Welcome Panel */}
       <View style={styles.itGreeting}>
-        <Text style={styles.itGreetTitle}>Welcome back, Student! 👋</Text>
+        <Text style={styles.itGreetTitle}>Welcome back, {userRole}! 👋</Text>
         <Text style={styles.itGreetSub}>Kwekwe Poly Information Technology • Division of CS & IS</Text>
         <View style={styles.focusPill}>
           <Text style={styles.focusPillText}>💻 Focus Area: Database Systems & Software Engineering</Text>
@@ -70,7 +78,7 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greet}>EduMentor Hub</Text>
-          <Text style={styles.role}>Kwekwe Poly AI Academic Assistant</Text>
+          <Text style={styles.role}>{userRole === 'Lecturer' ? 'Lecturer Workspace' : 'Student Workspace'}</Text>
         </View>
         <View style={styles.streak}>
           <Text style={styles.streakText}>🔥 5 Days</Text>

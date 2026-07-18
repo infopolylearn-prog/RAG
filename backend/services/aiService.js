@@ -160,6 +160,8 @@ Context: ${context || 'None'}`;
 
 // Main cascading cascade caller
 async function getCascadeAIResponse(message, subject, context) {
+    const safeEducationalReply = `I’m here to help with your academic question. For now, the live AI provider connection is unavailable, so I can still guide you with a structured explanation: \n\n${message}\n\nPlease review the topic in your lecture notes and ask again once the live model connection is enabled. This response is a safe fallback so the tutor experience remains usable while the backend provider keys are configured.`;
+
     try {
         console.log('[AI Cascade]: Attempting Gemini 2.0 Flash...');
         const answer = await tryGemini(message, subject, context);
@@ -178,7 +180,10 @@ async function getCascadeAIResponse(message, subject, context) {
                 return { answer: result.text, model: result.modelUsed };
             } catch (openRouterError) {
                 console.error(`[AI Cascade OpenRouter Error]: ${openRouterError.message}`);
-                throw new Error('All AI service providers are currently offline. Please contact Kwekwe Poly IT admin.');
+                return {
+                    answer: safeEducationalReply,
+                    model: 'fallback-educational-guide'
+                };
             }
         }
     }
