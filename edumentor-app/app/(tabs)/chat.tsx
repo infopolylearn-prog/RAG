@@ -18,9 +18,9 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'ai',
-      text: 'I am your live EduMentor AI Academic Tutor. I am connected to the backend and will answer from the configured AI provider.',
+      text: 'I’m ready to help with your coursework. Ask me anything and I’ll respond using the connected backend.',
       timestamp: '10:42 AM',
-      model: 'gemini-2.0-flash'
+      model: 'live-backend'
     }
   ]);
 
@@ -105,7 +105,7 @@ export default function ChatScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>EduMentor Assistant</Text>
-        <Text style={styles.status}>● Kwekwe Poly AI • Live Backend Mode</Text>
+        <Text style={styles.status}>● Connected to EduMentor backend</Text>
       </View>
 
       {/* Sub-tab segment switcher */}
@@ -159,7 +159,7 @@ export default function ChatScreen() {
             {loading && (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator animating={true} color="#4f46e5" size="small" />
-                <Text style={styles.loadingText}>RAG context matching in progress...</Text>
+                <Text style={styles.loadingText}>Generating your answer...</Text>
               </View>
             )}
           </ScrollView>

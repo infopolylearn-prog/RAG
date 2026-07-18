@@ -16,7 +16,7 @@ export interface DocumentChunk {
 
 /**
  * Finds relevant academic text chunks using Supabase pgvector cosine distance metrics (RPC).
- * Falls back gracefully to offline mock matches if credentials fail or are offline.
+ * Falls back gracefully when remote search is unavailable.
  * @param query Student query
  * @param courseId Filter by course
  * @param queryEmbedding Optional vector embedding representation of the query
@@ -41,8 +41,8 @@ export async function searchSyllabusAndMaterials(
       console.warn('[supabase.ts]: match_document_chunks RPC returned error/null. Falling back to semantic word matching...', error);
     }
 
-    // High fidelity offline fallback matches for robustness and terminal environment safety
-    const mockDb: DocumentChunk[] = [
+    // Lightweight fallback content for resilience when remote search is unavailable
+    const fallbackDb: DocumentChunk[] = [
       {
         id: 'chunk-1',
         material_id: 'doc-normalization',
@@ -64,7 +64,7 @@ export async function searchSyllabusAndMaterials(
     ];
 
     const normalizedQuery = query.toLowerCase();
-    return mockDb.filter(chunk =>
+    return fallbackDb.filter(chunk =>
       chunk.content.toLowerCase().split(' ').some(word => normalizedQuery.includes(word))
     );
   } catch (err) {

@@ -40,6 +40,7 @@ app.use(limiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/resources', resourcesRoutes);
+app.use('/api/admin', adminContentRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationsRoutes);

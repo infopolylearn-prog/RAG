@@ -942,13 +942,14 @@ body {
 
 /* A. Dashboard Widgets */
 .streak-card {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.25);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(16, 185, 129, 0.16) 100%);
+    border: 1px solid rgba(129, 140, 248, 0.3);
     border-radius: 16px;
     padding: 0.8rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.75rem;
     margin-bottom: 0.8rem;
 }
 
@@ -956,31 +957,41 @@ body {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    flex: 1;
 }
 
 .streak-fire-emoji {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
 }
 
 .streak-info h4 {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 800;
     color: #fff;
 }
 
 .streak-info p {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     color: #cbd5e1;
+    line-height: 1.35;
 }
 
 .streak-badge {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, 0.3);
-    font-size: 0.65rem;
+    background: rgba(16, 185, 129, 0.16);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.26);
+    font-size: 0.62rem;
     font-weight: 700;
-    padding: 0.2rem 0.5rem;
-    border-radius: 6px;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
 }
 
 .stat-cards-row {
@@ -1078,6 +1089,57 @@ body {
 }
 
 /* B. AI Tutor Chat View */
+.study-panel-card {
+    margin-top: 0.8rem;
+    padding: 0.7rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    text-align: left;
+}
+
+.study-panel-card h4 {
+    font-size: 0.72rem;
+    color: #fff;
+    margin-bottom: 0.45rem;
+}
+
+.study-hub-list, .revision-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.study-hub-item, .revision-card {
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    background: rgba(17,24,39,0.45);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.study-hub-item strong, .revision-card strong {
+    display: block;
+    color: #fff;
+    font-size: 0.68rem;
+    margin-bottom: 0.15rem;
+}
+
+.study-hub-item span, .revision-card p {
+    color: var(--text-muted-dark);
+    font-size: 0.62rem;
+    line-height: 1.3;
+}
+
+.empty-study-state, .empty-state-card {
+    padding: 0.8rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.1);
+    color: var(--text-muted-dark);
+    font-size: 0.68rem;
+    line-height: 1.4;
+}
+
 .chat-welcome-state {
     text-align: center;
     padding: 1.5rem;
@@ -1205,6 +1267,104 @@ body {
 
 .message-content li {
     margin-bottom: 0.2rem;
+}
+
+.ai-response-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.ai-response-hero {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    padding: 0.6rem;
+}
+
+.ai-response-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: #a5b4fc;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.ai-response-hero h3 {
+    margin: 0 0 0.2rem;
+    font-size: 0.8rem;
+}
+
+.ai-response-hero p {
+    margin: 0;
+    color: var(--text-muted-dark);
+    font-size: 0.68rem;
+    line-height: 1.4;
+}
+
+.ai-response-section {
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+.ai-response-section-title {
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+}
+
+.ai-response-list {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.ai-response-list li {
+    font-size: 0.68rem;
+    color: #e2e8f0;
+    margin-bottom: 0.24rem;
+}
+
+.ai-response-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.ai-response-action {
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.04);
+    color: #cbd5e1;
+    border-radius: 999px;
+    padding: 0.22rem 0.45rem;
+    font-size: 0.58rem;
+    cursor: pointer;
+}
+
+.ai-response-support-item {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.16);
+    border-radius: 8px;
+    padding: 0.4rem 0.45rem;
+    margin-top: 0.3rem;
+}
+
+.ai-response-support-item strong {
+    display: block;
+    color: #fff;
+    font-size: 0.64rem;
+    margin-bottom: 0.16rem;
+}
+
+.ai-response-support-item span {
+    color: var(--text-muted-dark);
+    font-size: 0.6rem;
+    line-height: 1.35;
 }
 
 .message-content pre {
@@ -1336,6 +1496,64 @@ body {
 }
 
 /* C. Courses Curriculum Accordion */
+.tutorial-card {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: rgba(17,24,39,0.72);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 0.7rem;
+    margin-bottom: 0.55rem;
+}
+
+.tutorial-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(79, 70, 229, 0.18);
+    color: #a5b4fc;
+    font-size: 1rem;
+}
+
+.tutorial-details {
+    flex: 1;
+}
+
+.tutorial-module {
+    color: #818cf8;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.tutorial-title {
+    color: #fff;
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-top: 0.1rem;
+}
+
+.tutorial-topic {
+    color: var(--text-muted-dark);
+    font-size: 0.64rem;
+    margin-top: 0.18rem;
+}
+
+.tutorial-link {
+    text-decoration: none;
+    background: rgba(16, 185, 129, 0.16);
+    color: #34d399;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.3rem 0.55rem;
+    border-radius: 8px;
+}
+
 .courses-curriculum-header {
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
     border: 1px solid var(--border-dark);
@@ -1608,6 +1826,58 @@ body {
 }
 
 /* E. Study Planner Checklists */
+.planner-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.7rem;
+    padding: 0.7rem;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.planner-summary-copy {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.planner-summary-copy strong {
+    color: #fff;
+    font-size: 0.7rem;
+}
+
+.planner-summary-copy span {
+    color: var(--text-muted-dark);
+    font-size: 0.6rem;
+}
+
+.planner-summary-chip {
+    background: rgba(99, 102, 241, 0.16);
+    color: #a5b4fc;
+    border: 1px solid rgba(99, 102, 241, 0.24);
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.planner-progress-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+}
+
+.planner-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: inherit;
+}
+
 .planner-header-card {
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
     border: 1px solid var(--border-dark);
@@ -1665,24 +1935,48 @@ body {
 .task-item {
     background: rgba(17, 24, 39, 0.5);
     border: 1px solid var(--border-dark);
-    border-radius: 10px;
-    padding: 0.5rem 0.6rem;
+    border-radius: 12px;
+    padding: 0.55rem 0.65rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
 }
 
-.task-item input[type="checkbox"] {
+.task-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.task-check input[type="checkbox"] {
     cursor: pointer;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     accent-color: var(--primary);
+}
+
+.task-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
 }
 
 .task-text {
     font-size: 0.72rem;
     color: #cbd5e1;
-    flex: 1;
+    font-weight: 700;
+}
+
+.task-meta {
+    font-size: 0.6rem;
+    color: var(--text-muted-dark);
+}
+
+.task-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 .prio-tag {
@@ -1722,6 +2016,16 @@ body {
 }
 
 /* F. Profile and Admin Panel Styles */
+.topic-chip {
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.03);
+    color: #cbd5e1;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    padding: 0.35rem 0.65rem;
+    cursor: pointer;
+}
+
 .profile-card {
     background: rgba(17, 24, 39, 0.6);
     border: 1px solid var(--border-dark);

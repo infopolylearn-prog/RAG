@@ -10,82 +10,132 @@ class EduMentorSimulator {
             role: 'Student'
         };
         this.currentActiveTab = 'dashboard';
-        this.streakCount = 5;
+        this.streakCount = 0;
         this.isPoweredOn = true;
         this.notificationsOpen = false;
-        
+        this.apiBaseUrl = 'https://edumentor-backend-fbe9.onrender.com';
+        this.authToken = localStorage.getItem('edumentor-auth-token') || '';
+        this.authUser = null;
+
         // Mock Web Audio API Synth Context
         this.audioCtx = null;
 
-        // Dynamic Course Modules state (starts with 2 pre-seeded, Admin can dynamically append new ones!)
-        this.courseModules = [
-            {
-                title: 'Module 1: Relational Model',
-                topics: ['Relational Database Schemas', 'Primary and Foreign Keys']
-            },
-            {
-                title: 'Module 2: Database Normalization',
-                topics: ['Insertion & Deletion Anomalies', 'First & Second Normal Form', 'Third Normal Form (3NF) & BCNF']
-            }
-        ];
+        this.courses = [];
+        this.courseModules = [];
+        this.courseTitle = 'Admin-managed course';
+        this.courseDescription = 'Lessons and study resources published by the admin.';
 
-        // Video Tutorials list
-        this.videoTutorials = [
-            { id: 1, title: 'Database Systems Crash Course', module_name: 'Module 1: Relational Algebra', topic_name: '1.2 Schema Design & Normalization Rules', video_url: 'https://www.youtube.com/watch?v=KwekwePolyCS301' }
-        ];
+        this.videoTutorials = [];
+        this.documentsRegistry = [];
+        this.studyHubItems = [];
+        this.revisionItems = [];
 
-        // Global Documents Registry (all start as completely unreleased/hidden except the syllabus!)
-        this.documentsRegistry = [
-            { id: 1, title: 'Syllabus_CS301.pdf', type: 'syllabus', content: 'Database systems CS301. Course content: relational data model, schemas, normalization, anomalies, 1NF, 2NF, 3NF, BCNF.', released: true, animClass: '' },
-            { id: 2, title: 'Lecture_Notes_DB_Normalization.pdf', type: 'notes', content: 'Database Normalization minimizes data redundancy. First Normal Form (1NF) requires atomic attributes. Second Normal Form (2NF) resolves partial dependencies. Third Normal Form (3NF) resolves transitive functional dependencies.', released: false, animClass: '' },
-            { id: 3, title: 'Networking_TCP_vs_UDP.pdf', type: 'notes', content: 'TCP (Transmission Control Protocol) is connection-oriented, reliable, guarantees packet ordering, handles flow control, and uses a three-way handshake. UDP (User Datagram Protocol) is connectionless, faster, has low overhead.', released: false, animClass: '' },
-            { id: 4, title: 'Exam_PastPaper_2024.pdf', type: 'papers', content: 'Database Systems Midterm. Q1: Explain transitive dependencies in 3NF with examples. Q2: Design schemas free of insertion anomalies. Q3: Difference between TCP three-way handshake and UDP.', released: false, animClass: '' }
-        ];
+        this.notifications = [];
+        this.chatQueries = [];
+        this.bookmarks = [];
+        this.downloads = [];
+        this.plannerTasks = [];
 
-        // Active notification messages
-        this.notifications = [
-            { id: 1, text: '📅 Database Exam on July 21, 2026', read: false },
-            { id: 2, text: '🤖 New AI model DeepSeek R1 loaded as fallback', read: false },
-            { id: 3, text: '🎓 Admin released a new syllabus resource!', read: false }
-        ];
-
-        // Mock Recent Chat Query History
-        this.chatQueries = [
-            { query: 'Explain database normalization.', date: 'Today' },
-            { query: 'What is the difference between TCP and UDP?', date: 'Yesterday' }
-        ];
-
-        // Bookmarks & Downloads state tracking
-        this.bookmarks = [1];
-        this.downloads = [1];
-
-        // Planner Tasks (Task Checklist with Priority)
-        this.plannerTasks = [
-            { id: 1, text: 'Read database normalization notes', priority: 'high', completed: true },
-            { id: 2, text: 'Review past midterm exams', priority: 'medium', completed: false },
-            { id: 3, text: 'Consult EduMentor AI about TCP handshakes', priority: 'low', completed: false }
-        ];
-
-        // Accounts list (Admin portal management)
         this.users = [
             { name: 'Joshua Webs Administrator', username: 'joshwebsinfo@gmail.com', role: 'Admin', studentNo: 'N/A' },
             { name: 'Prof. Alistair Chen', username: 'chen@kwekwe.ac.zw', role: 'Lecturer', studentNo: 'N/A' },
             { name: 'Demo Student', username: 'student@kwekwe.ac.zw', role: 'Student', studentNo: 'KP-2026-993F' }
         ];
 
-        // Departments list
-        this.departments = [
-            { id: 1, name: 'Information Technology', head: 'Prof. Alistair Chen' },
-            { id: 2, name: 'Computer Science', head: 'Prof. Sarah Jenkins' }
-        ];
-
+        this.departments = [];
         this.adminActiveSubTab = 'users';
+        this.loadStoredState();
+    }
+
+    loadStoredState() {
+        try {
+            const raw = localStorage.getItem('edumentor-admin-state');
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (Array.isArray(saved.courses)) this.courses = saved.courses;
+            if (Array.isArray(saved.courseModules)) this.courseModules = saved.courseModules;
+            if (saved.courseTitle) this.courseTitle = saved.courseTitle;
+            if (saved.courseDescription) this.courseDescription = saved.courseDescription;
+            if (Array.isArray(saved.videoTutorials)) this.videoTutorials = saved.videoTutorials;
+            if (Array.isArray(saved.documentsRegistry)) this.documentsRegistry = saved.documentsRegistry;
+            if (Array.isArray(saved.studyHubItems)) this.studyHubItems = saved.studyHubItems;
+            if (Array.isArray(saved.revisionItems)) this.revisionItems = saved.revisionItems;
+            if (Array.isArray(saved.notifications)) this.notifications = saved.notifications;
+            if (Array.isArray(saved.chatQueries)) this.chatQueries = saved.chatQueries;
+            if (Array.isArray(saved.bookmarks)) this.bookmarks = saved.bookmarks;
+            if (Array.isArray(saved.downloads)) this.downloads = saved.downloads;
+            if (Array.isArray(saved.plannerTasks)) this.plannerTasks = saved.plannerTasks;
+            if (Array.isArray(saved.users)) this.users = saved.users;
+            if (Array.isArray(saved.departments)) this.departments = saved.departments;
+        } catch (err) {
+            console.warn('Unable to restore saved EduMentor state', err);
+        }
+    }
+
+    persistState() {
+        try {
+            const state = {
+                courses: this.courses,
+                courseModules: this.courseModules,
+                courseTitle: this.courseTitle,
+                courseDescription: this.courseDescription,
+                videoTutorials: this.videoTutorials,
+                documentsRegistry: this.documentsRegistry,
+                studyHubItems: this.studyHubItems,
+                revisionItems: this.revisionItems,
+                notifications: this.notifications,
+                chatQueries: this.chatQueries,
+                bookmarks: this.bookmarks,
+                downloads: this.downloads,
+                plannerTasks: this.plannerTasks,
+                users: this.users,
+                departments: this.departments
+            };
+            localStorage.setItem('edumentor-admin-state', JSON.stringify(state));
+        } catch (err) {
+            console.warn('Unable to save EduMentor state', err);
+        }
+    }
+
+    getApiUrl(path) {
+        return `${this.apiBaseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+    }
+
+    getAuthHeaders(includeJson = true) {
+        const headers = {};
+        if (this.authToken) {
+            headers.Authorization = `Bearer ${this.authToken}`;
+        }
+        if (includeJson) {
+            headers['Content-Type'] = 'application/json';
+        }
+        return headers;
     }
 
     async init() {
         this.setupClock();
         await this.fetchVideoTutorials();
         await this.fetchPlannerTasks();
+        if (this.authToken) {
+            try {
+                const res = await fetch(this.getApiUrl('/api/auth/me'), { headers: this.getAuthHeaders(false) });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.user) {
+                        this.authUser = data.user;
+                        this.currentUser = {
+                            name: data.user.full_name || data.user.email || 'User',
+                            username: data.user.email || '',
+                            studentNo: data.user.studentNo || 'KP-2026-993F',
+                            role: data.user.role || 'Student'
+                        };
+                        this.currentPersona = this.currentUser.role;
+                    }
+                }
+            } catch (err) {
+                console.warn('Unable to restore saved auth session', err);
+            }
+        }
         this.renderAllViews();
         this.setupChatAutoResize();
         this.playHapticSound(600, 0.08); // Initial startup beep
@@ -101,7 +151,7 @@ class EduMentorSimulator {
 
     async fetchVideoTutorials() {
         try {
-            const res = await fetch('/api/video_tutorials');
+            const res = await fetch(this.getApiUrl('/api/video_tutorials'));
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.length > 0) {
@@ -109,13 +159,13 @@ class EduMentorSimulator {
                 }
             }
         } catch (err) {
-            console.error('Error fetching tutorials from Supabase/PostgreSQL backend:', err);
+            console.error('Error fetching tutorials from live backend:', err);
         }
     }
 
     async fetchPlannerTasks() {
         try {
-            const res = await fetch('/api/planner_tasks');
+            const res = await fetch(this.getApiUrl('/api/planner_tasks'));
             if (res.ok) {
                 const data = await res.json();
                 if (data && data.length > 0) {
@@ -128,7 +178,7 @@ class EduMentorSimulator {
                 }
             }
         } catch (err) {
-            console.error('Error fetching planner tasks:', err);
+            console.error('Error fetching planner tasks from live backend:', err);
         }
     }
 
@@ -192,6 +242,15 @@ class EduMentorSimulator {
                 toast.classList.add('hidden');
             }, 3000);
         }
+    }
+
+    escapeHtml(value = '') {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     // Theme Switcher Controller
@@ -288,7 +347,7 @@ class EduMentorSimulator {
 
         this.showToast(`Swapped to simulated ${persona} workflow`);
         this.renderAllViews();
-        this.switchTab('dashboard');
+        this.switchTab(persona === 'Admin' ? 'admin' : 'dashboard');
     }
 
     // Auth screen controller
@@ -328,61 +387,105 @@ class EduMentorSimulator {
         dots[nextIdx].classList.add('active');
     }
 
-    handleLogin(event) {
+    async handleLogin(event) {
         event.preventDefault();
-        const userVal = document.getElementById('login-username').value;
+        const userVal = document.getElementById('login-username').value.trim();
         const passVal = document.getElementById('login-password').value;
 
-        // Match admin login or general login
-        if (userVal === 'joshwebsinfo@gmail.com' && passVal === 'joshua#$#$') {
-            this.currentUser = {
-                name: 'Joshua Webs Administrator',
-                username: 'joshwebsinfo@gmail.com',
-                studentNo: 'N/A',
-                role: 'Admin'
-            };
-            this.currentPersona = 'Admin';
-            this.playHapticSuccess();
-            this.showToast('Admin logged in successfully!');
-        } else {
-            // General Student/Lecturer log in
-            this.currentUser = {
-                name: userVal.split('@')[0],
-                username: userVal,
-                studentNo: 'KP-2026-993F',
-                role: userVal.includes('teacher') || userVal.includes('chen') ? 'Lecturer' : 'Student'
-            };
-            this.currentPersona = this.currentUser.role;
-            this.playHapticSuccess();
-            this.showToast(`Logged in as ${this.currentUser.role}`);
+        const normalizedEmail = userVal.toLowerCase();
+        const candidateEmails = [normalizedEmail];
+        if (normalizedEmail === 'joshwebsinfo@gmail.com' || normalizedEmail === 'joshua@gmail.com') {
+            candidateEmails.push('joshua@gmail.com');
+            candidateEmails.push('joshwebsinfo@gmail.com');
         }
 
-        document.getElementById('screen-auth').classList.remove('active');
-        document.getElementById('screen-shell').classList.add('active');
-        this.renderAllViews();
-        this.switchTab('dashboard');
+        this.playHapticSound(500, 0.04);
+        try {
+            let lastError = null;
+            for (const email of [...new Set(candidateEmails)]) {
+                const res = await fetch(this.getApiUrl('/api/auth/login'), {
+                    method: 'POST',
+                    headers: this.getAuthHeaders(true),
+                    body: JSON.stringify({ email, password: passVal })
+                });
+                const data = await res.json().catch(() => ({}));
+
+                if (res.ok && data?.token && data?.user) {
+                    this.authToken = data.token;
+                    this.authUser = data.user;
+                    localStorage.setItem('edumentor-auth-token', data.token);
+                    localStorage.setItem('edumentor-auth-user', JSON.stringify(data.user));
+
+                    this.currentUser = {
+                        name: data.user.full_name || data.user.email || userVal,
+                        username: data.user.email || userVal,
+                        studentNo: data.user.studentNo || 'KP-2026-993F',
+                        role: data.user.role || 'Student'
+                    };
+                    this.currentPersona = this.currentUser.role;
+                    this.playHapticSuccess();
+                    this.showToast(this.currentUser.role === 'Admin' ? 'Admin access granted' : `Logged in as ${this.currentUser.role}`);
+
+                    document.getElementById('screen-auth').classList.remove('active');
+                    document.getElementById('screen-shell').classList.add('active');
+                    this.renderAllViews();
+                    this.switchTab(this.currentUser.role === 'Admin' ? 'admin' : 'dashboard');
+                    return;
+                }
+
+                lastError = new Error(data?.message || 'Authentication failed');
+            }
+
+            throw lastError || new Error('Authentication failed');
+        } catch (err) {
+            this.playHapticSound(280, 0.08, 'sawtooth');
+            this.showToast(err.message || 'Unable to reach the live backend');
+        }
     }
 
-    handleRegister(event) {
+    async handleRegister(event) {
         event.preventDefault();
-        const nameVal = document.getElementById('register-name').value;
-        const emailVal = document.getElementById('register-email').value;
-        const studentNoVal = document.getElementById('register-student-no').value;
+        const nameVal = document.getElementById('register-name').value.trim();
+        const emailVal = document.getElementById('register-email').value.trim();
+        const studentNoVal = document.getElementById('register-student-no').value.trim();
+        const passVal = document.getElementById('register-password').value;
 
-        this.currentUser = {
-            name: nameVal,
-            username: emailVal,
-            studentNo: studentNoVal,
-            role: 'Student'
-        };
-        this.currentPersona = 'Student';
-        this.playHapticSuccess();
-        this.showToast(`Account ${studentNoVal} created successfully!`);
+        this.playHapticSound(500, 0.04);
+        try {
+            const res = await fetch(this.getApiUrl('/api/auth/register'), {
+                method: 'POST',
+                headers: this.getAuthHeaders(true),
+                body: JSON.stringify({ email: emailVal, password: passVal, full_name: nameVal, role: 'Student', studentNo: studentNoVal })
+            });
+            const data = await res.json().catch(() => ({}));
 
-        document.getElementById('screen-auth').classList.remove('active');
-        document.getElementById('screen-shell').classList.add('active');
-        this.renderAllViews();
-        this.switchTab('dashboard');
+            if (!res.ok || !data?.token || !data?.user) {
+                throw new Error(data?.message || 'Registration failed');
+            }
+
+            this.authToken = data.token;
+            this.authUser = data.user;
+            localStorage.setItem('edumentor-auth-token', data.token);
+            localStorage.setItem('edumentor-auth-user', JSON.stringify(data.user));
+
+            this.currentUser = {
+                name: data.user.full_name || nameVal,
+                username: data.user.email || emailVal,
+                studentNo: data.user.studentNo || studentNoVal,
+                role: data.user.role || 'Student'
+            };
+            this.currentPersona = 'Student';
+            this.playHapticSuccess();
+            this.showToast(`Account ${studentNoVal} created successfully!`);
+
+            document.getElementById('screen-auth').classList.remove('active');
+            document.getElementById('screen-shell').classList.add('active');
+            this.renderAllViews();
+            this.switchTab('dashboard');
+        } catch (err) {
+            this.playHapticSound(280, 0.08, 'sawtooth');
+            this.showToast(err.message || 'Unable to register through the live backend');
+        }
     }
 
     handleForgot(event) {
@@ -401,27 +504,140 @@ class EduMentorSimulator {
     }
 
     // Dynamic Course modules management
+    adminAddCourse(event) {
+        event.preventDefault();
+        const titleInput = document.getElementById('admin-add-course-title');
+        const descriptionInput = document.getElementById('admin-add-course-description');
+
+        const title = titleInput.value.trim();
+        const description = descriptionInput.value.trim();
+
+        if (title) {
+            this.courses.unshift({
+                id: Date.now(),
+                title,
+                description: description || 'Admin-managed course published to all users.',
+                modules: []
+            });
+
+            titleInput.value = '';
+            descriptionInput.value = '';
+
+            this.playHapticSuccess();
+            this.persistState();
+            this.renderAllViews();
+            this.showToast(`Course ${title} published to everyone.`);
+            this.addNotification(`📚 New course published: ${title}`);
+        }
+    }
+
     adminAddModule(event) {
         event.preventDefault();
         const titleInput = document.getElementById('admin-add-module-title');
         const topicInput = document.getElementById('admin-add-module-topic');
-        
+
         const title = titleInput.value.trim();
         const topic = topicInput.value.trim();
 
         if (title && topic) {
-            this.courseModules.push({
+            if (this.courses.length === 0) {
+                this.courses.unshift({
+                    id: Date.now(),
+                    title: this.courseTitle,
+                    description: this.courseDescription,
+                    modules: []
+                });
+            }
+
+            const targetCourse = this.courses[0];
+            targetCourse.modules.push({
                 title: title,
                 topics: [topic]
             });
+            this.courseModules = targetCourse.modules;
 
             titleInput.value = '';
             topicInput.value = '';
 
             this.playHapticSuccess();
-            this.showToast('New module added and synchronized across Kwekwe Poly!');
-            this.addNotification(`📚 New syllabus module added: ${title}`);
+            this.persistState();
+            this.showToast('New module added and synchronized across the platform.');
+            this.addNotification(`📚 New module added: ${title}`);
             this.renderAllViews();
+        }
+    }
+
+    adminAddResource(event) {
+        event.preventDefault();
+        const titleInput = document.getElementById('admin-add-resource-title');
+        const typeInput = document.getElementById('admin-add-resource-type');
+        const contentInput = document.getElementById('admin-add-resource-content');
+        const linkInput = document.getElementById('admin-add-resource-link');
+
+        const title = titleInput.value.trim();
+        const type = typeInput.value.trim();
+        const content = contentInput.value.trim();
+        const link = linkInput.value.trim();
+
+        if (title && content) {
+            this.documentsRegistry.unshift({
+                id: Date.now(),
+                title,
+                type: type || 'notes',
+                content,
+                released: true,
+                animClass: '',
+                link: link || ''
+            });
+
+            titleInput.value = '';
+            typeInput.value = 'notes';
+            contentInput.value = '';
+            linkInput.value = '';
+
+            this.playHapticSuccess();
+            this.persistState();
+            this.renderAllViews();
+            this.showToast(`Resource ${title} released to everyone.`);
+            this.addNotification(`📄 New resource published: ${title}`);
+        }
+    }
+
+    adminAddStudyHubItem(event) {
+        event.preventDefault();
+        const titleInput = document.getElementById('admin-add-study-title');
+        const summaryInput = document.getElementById('admin-add-study-summary');
+
+        const title = titleInput.value.trim();
+        const summary = summaryInput.value.trim();
+
+        if (title && summary) {
+            this.studyHubItems.unshift({ id: Date.now(), title, summary });
+            titleInput.value = '';
+            summaryInput.value = '';
+            this.playHapticSuccess();
+            this.persistState();
+            this.renderAllViews();
+            this.showToast('Study hub item published.');
+        }
+    }
+
+    adminAddRevisionItem(event) {
+        event.preventDefault();
+        const promptInput = document.getElementById('admin-add-revision-prompt');
+        const answerInput = document.getElementById('admin-add-revision-answer');
+
+        const prompt = promptInput.value.trim();
+        const answer = answerInput.value.trim();
+
+        if (prompt && answer) {
+            this.revisionItems.unshift({ id: Date.now(), prompt, answer });
+            promptInput.value = '';
+            answerInput.value = '';
+            this.playHapticSuccess();
+            this.persistState();
+            this.renderAllViews();
+            this.showToast('Revision challenge published.');
         }
     }
 
@@ -538,9 +754,9 @@ class EduMentorSimulator {
             textInput.value = '';
 
             try {
-                await fetch('/api/planner_tasks', {
+                await fetch(this.getApiUrl('/api/planner_tasks'), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: this.getAuthHeaders(true),
                     body: JSON.stringify(newTaskObj)
                 });
             } catch (err) {
@@ -557,9 +773,9 @@ class EduMentorSimulator {
             this.renderPlanner();
 
             try {
-                await fetch(`/api/planner_tasks/${taskId}`, {
+                await fetch(this.getApiUrl(`/api/planner_tasks/${taskId}`), {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: this.getAuthHeaders(true),
                     body: JSON.stringify({ completed: task.completed ? 1 : 0 })
                 });
             } catch (err) {
@@ -577,7 +793,7 @@ class EduMentorSimulator {
 
         for (const t of completedTasks) {
             try {
-                await fetch(`/api/planner_tasks/${t.id}`, { method: 'DELETE' });
+                await fetch(this.getApiUrl(`/api/planner_tasks/${t.id}`), { method: 'DELETE', headers: this.getAuthHeaders(true) });
             } catch (e) {
                 // Ignore fallback failures
             }
@@ -597,59 +813,95 @@ class EduMentorSimulator {
     }
 
     renderDashboard() {
-        const streakEl = document.getElementById('streak-num');
-        if (streakEl) streakEl.innerText = this.streakCount;
+        const focusEl = document.getElementById('study-focus-score');
+        const focusBadge = document.getElementById('focus-badge');
+        const publishedContentCount = this.videoTutorials.length + this.studyHubItems.length + this.revisionItems.length;
+        if (focusEl) {
+            const completed = this.plannerTasks.filter(task => task.completed).length;
+            const total = this.plannerTasks.length;
+            focusEl.innerText = total > 0 ? `${completed}/${total}` : `${publishedContentCount} live`;
+        }
+        if (focusBadge) {
+            focusBadge.innerText = publishedContentCount > 0 ? 'Live content' : 'Awaiting admin';
+        }
 
         const queriesEl = document.getElementById('dash-queries-count');
         if (queriesEl) queriesEl.innerText = `${this.chatQueries.length} Queries`;
 
         const coursesEl = document.getElementById('dash-courses-count');
-        if (coursesEl) coursesEl.innerText = `1 Course`;
+        if (coursesEl) {
+            const totalCourses = this.courses.length || (this.courseModules.length > 0 ? 1 : 0);
+            coursesEl.innerText = `${totalCourses} ${totalCourses === 1 ? 'Course' : 'Courses'}`;
+        }
 
-        // Render dynamic tutorials feed
         const feedContainer = document.getElementById('dashboard-tutorials-list');
         if (feedContainer) {
             feedContainer.innerHTML = '';
             if (this.videoTutorials.length === 0) {
-                feedContainer.innerHTML = '<p style="font-size:0.75rem; color:var(--text-muted); text-align:center; padding:1rem;">No tutorials available.</p>';
+                feedContainer.innerHTML = '<div class="empty-state-card"><strong>No tutorials published yet.</strong><p>Admin content appears here after it is shared with everyone.</p></div>';
             } else {
                 this.videoTutorials.forEach(t => {
                     const card = document.createElement('div');
                     card.className = 'tutorial-card';
-                    card.style = 'background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 0.8rem; display: flex; gap: 0.8rem; align-items: center; transition: all 0.2s;';
                     card.innerHTML = `
-                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #ef4444;">
-                            ▶
+                        <div class="tutorial-icon">▶</div>
+                        <div class="tutorial-details">
+                            <div class="tutorial-module">${t.module_name || 'Admin published lesson'}</div>
+                            <div class="tutorial-title">${t.title}</div>
+                            <div class="tutorial-topic">Topic: ${t.topic_name || 'Shared by admin'}</div>
                         </div>
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-size: 0.65rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${t.module_name}</div>
-                            <div style="font-size: 0.8rem; font-weight: 700; color: #fff; margin: 0.1rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.title}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Topic: ${t.topic_name}</div>
-                        </div>
-                        <a href="${t.video_url}" target="_blank" onclick="edumentor.playHapticSuccess();" style="text-decoration: none; background: var(--primary); color: #fff; font-size: 0.7rem; font-weight: 700; padding: 0.4rem 0.6rem; border-radius: 8px;">Watch</a>
+                        <a href="${t.video_url}" target="_blank" onclick="edumentor.playHapticSuccess();" class="tutorial-link">Watch</a>
                     `;
                     feedContainer.appendChild(card);
+                });
+            }
+        }
+
+        const topicsGrid = document.getElementById('dashboard-topics-grid');
+        if (topicsGrid) {
+            topicsGrid.innerHTML = '';
+            const allTopics = this.courses.flatMap(course => (course.modules || []).flatMap(module => module.topics || []));
+            if (allTopics.length === 0) {
+                topicsGrid.innerHTML = '<div class="empty-topic-chip">Admin can publish topics for all learners.</div>';
+            } else {
+                allTopics.slice(0, 4).forEach(topic => {
+                    const chip = document.createElement('button');
+                    chip.className = 'topic-chip';
+                    chip.innerText = topic;
+                    chip.onclick = () => this.prefillAndGoToChat(`Help me understand ${topic} in detail.`);
+                    topicsGrid.appendChild(chip);
                 });
             }
         }
     }
 
     renderChatMessages() {
-        // Initial welcome chat state if empty
         const box = document.getElementById('chat-messages-box');
         if (box && box.children.length === 0) {
+            const studyHubHtml = this.studyHubItems.length > 0
+                ? `<div class="study-hub-list">${this.studyHubItems.slice(0, 3).map(item => `<div class="study-hub-item"><strong>${item.title}</strong><span>${item.summary}</span></div>`).join('')}</div>`
+                : '<div class="empty-study-state">Admin can publish study hub cards here for everyone.</div>';
+
+            const revisionHtml = this.revisionItems.length > 0
+                ? `<div class="revision-list">${this.revisionItems.slice(0, 2).map(item => `<div class="revision-card"><strong>${item.prompt}</strong><p>${item.answer}</p></div>`).join('')}</div>`
+                : '<div class="empty-study-state">Revision prompts will appear after the admin publishes them.</div>';
+
             box.innerHTML = `
                 <div class="chat-welcome-state">
                     <span class="welcome-robot">🤖</span>
-                    <h3>Kwekwe Poly Assistant</h3>
-                    <p>I behave like a personal lecturer and study companion. Type a query or choose a course topic recommendation below.</p>
+                    <h3>Admin-ready study companion</h3>
+                    <p>Ask for a recap, a concept breakdown, or use the admin-published study materials below.</p>
                     <div class="prompt-suggestions">
-                        <button class="prompt-suggest-btn" onclick="edumentor.prefillChatInput('Explain database normalization.')">
-                            💡 "Explain database normalization."
-                        </button>
-                        <button class="prompt-suggest-btn" onclick="edumentor.prefillChatInput('What is the difference between TCP and UDP?')">
-                            💡 "Difference between TCP & UDP"
-                        </button>
+                        <button class="prompt-suggest-btn" onclick="edumentor.prefillChatInput('Explain database normalization.')">💡 Explain database normalization</button>
+                        <button class="prompt-suggest-btn" onclick="edumentor.prefillChatInput('What is the difference between TCP and UDP?')">💡 Difference between TCP & UDP</button>
+                    </div>
+                    <div class="study-panel-card">
+                        <h4>Study Hub</h4>
+                        ${studyHubHtml}
+                    </div>
+                    <div class="study-panel-card">
+                        <h4>Revision</h4>
+                        ${revisionHtml}
                     </div>
                 </div>
             `;
@@ -661,49 +913,59 @@ class EduMentorSimulator {
         if (!box) return;
         box.innerHTML = '';
 
-        // Standard Single course (Database Systems CS301)
-        const card = document.createElement('div');
-        card.className = 'course-node open'; // starts open to show modules
-        
-        let modulesHtml = '';
-        this.courseModules.forEach((mod, idx) => {
-            let topicsHtml = '';
-            mod.topics.forEach(topic => {
-                topicsHtml += `
-                    <div class="topic-item-row" onclick="edumentor.askAITutorAbout('${topic}')">
-                        <span><span class="topic-bullet">▪</span> ${topic}</span>
-                        <button class="btn-ask-topic">Ask Mentor AI</button>
-                    </div>
-                `;
-            });
+        if (this.courses.length === 0) {
+            box.innerHTML = '<div class="empty-state-card"><strong>No courses published yet.</strong><p>Use the admin panel to publish courses, modules, and lessons for everyone.</p></div>';
+            return;
+        }
 
-            modulesHtml += `
-                <div class="module-node">
-                    <div class="module-title">${mod.title}</div>
-                    <div class="topics-list">
-                        ${topicsHtml}
+        this.courses.forEach(course => {
+            const card = document.createElement('div');
+            card.className = 'course-node open';
+
+            const modules = Array.isArray(course.modules) ? course.modules : [];
+            let modulesHtml = '';
+            if (modules.length === 0) {
+                modulesHtml = '<div class="empty-module-card">No modules published yet for this course.</div>';
+            } else {
+                modules.forEach(mod => {
+                    let topicsHtml = '';
+                    (mod.topics || []).forEach(topic => {
+                        topicsHtml += `
+                            <div class="topic-item-row" onclick="edumentor.askAITutorAbout('${topic}')">
+                                <span><span class="topic-bullet">▪</span> ${topic}</span>
+                                <button class="btn-ask-topic">Ask Mentor AI</button>
+                            </div>
+                        `;
+                    });
+
+                    modulesHtml += `
+                        <div class="module-node">
+                            <div class="module-title">${mod.title}</div>
+                            <div class="topics-list">
+                                ${topicsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            card.innerHTML = `
+                <div class="course-node-header" onclick="this.closest('.course-node').classList.toggle('open')">
+                    <div class="course-node-title-box">
+                        <div class="course-node-title">${course.title}</div>
+                        <div class="course-node-meta">${course.description || 'Admin published course'} • ${modules.length} Modules</div>
                     </div>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="course-node-body">
+                    ${modulesHtml}
                 </div>
             `;
+            box.appendChild(card);
         });
 
-        card.innerHTML = `
-            <div class="course-node-header" onclick="this.closest('.course-node').classList.toggle('open')">
-                <div class="course-node-title-box">
-                    <div class="course-node-title">Database Systems (CS301)</div>
-                    <div class="course-node-meta">IT Program • 100% Synced • ${this.courseModules.length} Modules</div>
-                </div>
-                <span class="accordion-arrow">▼</span>
-            </div>
-            <div class="course-node-body">
-                ${modulesHtml}
-            </div>
-        `;
-        box.appendChild(card);
-
-        // Update telemetry counts
         const syncCount = document.getElementById('sync-modules-count');
-        if (syncCount) syncCount.innerText = this.courseModules.length;
+        if (syncCount) syncCount.innerText = this.courses.reduce((sum, course) => sum + (course.modules || []).length, 0);
     }
 
     renderResources() {
@@ -718,7 +980,6 @@ class EduMentorSimulator {
         let releasedCount = 0;
 
         this.documentsRegistry.forEach(doc => {
-            // Render external telemetry sidebar item
             if (telemetryList) {
                 const badgeClass = doc.released ? 'badge-success' : 'badge-danger';
                 const badgeText = doc.released ? 'Released' : 'Locked';
@@ -731,7 +992,6 @@ class EduMentorSimulator {
                 telemetryList.appendChild(item);
             }
 
-            // Only display in the Student resources grid if released!
             if (doc.released) {
                 releasedCount++;
                 const isBookmarked = this.bookmarks.includes(doc.id);
@@ -745,7 +1005,7 @@ class EduMentorSimulator {
                     </div>
                     <div class="resource-info">
                         <div class="resource-title">${doc.title}</div>
-                        <div class="resource-meta">${doc.content.substring(0, 45)}...</div>
+                        <div class="resource-meta">${doc.content.substring(0, 80)}${doc.content.length > 80 ? '…' : ''}</div>
                     </div>
                     <div class="resource-actions">
                         <button class="btn-res-act ${isBookmarked ? 'active' : ''}" onclick="edumentor.toggleBookmark(${doc.id}, this)">
@@ -766,8 +1026,8 @@ class EduMentorSimulator {
             grid.innerHTML = `
                 <div class="empty-resources-state">
                     <span class="lock-emoji">🔒</span>
-                    <h4>Syllabus Resources Locked</h4>
-                    <p>There are no active study materials released yet. Please check back when your lecturer or administrator releases them.</p>
+                    <h4>Resources will appear here</h4>
+                    <p>The administrator can publish notes, slides, and study packs for everyone to access.</p>
                 </div>
             `;
         }
@@ -778,19 +1038,46 @@ class EduMentorSimulator {
         if (!container) return;
         container.innerHTML = '';
 
+        const completed = this.plannerTasks.filter(task => task.completed).length;
+        const total = this.plannerTasks.length;
+        const progress = total > 0 ? completed / total : 0;
+
+        const summary = document.createElement('div');
+        summary.className = 'planner-summary';
+        summary.innerHTML = `
+            <div class="planner-summary-copy">
+                <div>
+                    <strong>${completed}/${total} goals complete</strong>
+                    <span>${total === 0 ? 'Add your next milestone below.' : `${Math.round(progress * 100)}% of your study plan`}</span>
+                </div>
+                <span class="planner-summary-chip">${total === 0 ? 'Ready' : completed === total ? 'All done' : 'In progress'}</span>
+            </div>
+            <div class="planner-progress-bar"><div class="planner-progress-fill" style="width: ${Math.round(progress * 100)}%"></div></div>
+        `;
+        container.appendChild(summary);
+
         if (this.plannerTasks.length === 0) {
-            container.innerHTML = '<div class="empty-checklist">No tasks set. Add one above!</div>';
+            container.innerHTML += '<div class="empty-checklist">No tasks set yet. Add your next milestone above and it will appear here as a polished checklist card.</div>';
             return;
         }
 
         this.plannerTasks.forEach(t => {
             const item = document.createElement('div');
+            const priorityLabel = t.priority === 'high' ? 'High priority' : t.priority === 'low' ? 'Low priority' : 'Medium priority';
             item.className = `task-item ${t.completed ? 'completed' : ''} prio-${t.priority}`;
             item.innerHTML = `
-                <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="edumentor.toggleTask(${t.id})">
-                <span class="task-text">${t.text}</span>
-                <span class="prio-tag">${t.priority.toUpperCase()}</span>
-                <button class="btn-delete-task" onclick="edumentor.deleteTask(${t.id})">✕</button>
+                <label class="task-check">
+                    <input type="checkbox" ${t.completed ? 'checked' : ''} onclick="edumentor.toggleTask(${t.id})">
+                    <span class="task-checkmark"></span>
+                </label>
+                <div class="task-main">
+                    <span class="task-text">${this.escapeHtml(t.text)}</span>
+                    <span class="task-meta">${this.escapeHtml(priorityLabel)} • ${t.completed ? 'Completed' : 'In progress'}</span>
+                </div>
+                <div class="task-actions">
+                    <span class="prio-tag">${t.priority.toUpperCase()}</span>
+                    <button class="btn-delete-task" onclick="edumentor.deleteTask(${t.id})">✕</button>
+                </div>
             `;
             container.appendChild(item);
         });
@@ -798,6 +1085,7 @@ class EduMentorSimulator {
 
     deleteTask(id) {
         this.plannerTasks = this.plannerTasks.filter(t => t.id !== id);
+        this.persistState();
         this.playHapticSound(300, 0.05);
         this.renderPlanner();
     }
@@ -836,6 +1124,11 @@ class EduMentorSimulator {
         const uList = document.getElementById('admin-users-list');
         const dList = document.getElementById('admin-depts-list');
         const docsList = document.getElementById('admin-docs-list');
+        const modulesList = document.getElementById('admin-modules-list');
+        const tutorialsList = document.getElementById('admin-tutorials-list');
+        const resourcesList = document.getElementById('admin-resources-list');
+        const studyList = document.getElementById('admin-study-list');
+        const revisionList = document.getElementById('admin-revision-list');
 
         if (this.adminActiveSubTab === 'users' && uList) {
             uList.innerHTML = '';
@@ -871,28 +1164,123 @@ class EduMentorSimulator {
 
         if (this.adminActiveSubTab === 'documents' && docsList) {
             docsList.innerHTML = '';
-            this.documentsRegistry.forEach(doc => {
-                const row = document.createElement('div');
-                row.className = 'admin-account-row';
-                
-                let releaseBtn = '';
-                if (!doc.released) {
-                    releaseBtn = `<button class="btn-admin-act" onclick="edumentor.releaseResource(${doc.id})" style="background:var(--primary); color:#fff; border:none; padding:0.2rem 0.5rem;">Fade Release</button>`;
-                } else {
-                    releaseBtn = `<span class="badge badge-success" style="font-size:10px;">Released</span>`;
-                }
+            if (this.courses.length === 0) {
+                docsList.innerHTML = '<div class="empty-state-card"><strong>No published course content.</strong><p>Create courses and modules in the forms above.</p></div>';
+            } else {
+                this.courses.forEach(course => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>📚 ${course.title}</strong>
+                            <span class="account-meta">${course.description || 'Admin published course'}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">${(course.modules || []).length} modules</span>
+                    `;
+                    docsList.appendChild(row);
+                });
+            }
+        }
 
-                row.innerHTML = `
-                    <div class="account-info">
-                        <strong>📄 ${doc.title}</strong>
-                        <span class="account-meta">${doc.content.substring(0, 50)}...</span>
-                    </div>
-                    <div class="account-actions">
-                        ${releaseBtn}
-                    </div>
-                `;
-                docsList.appendChild(row);
-            });
+        if (modulesList) {
+            modulesList.innerHTML = '';
+            const mergedModules = this.courses.flatMap(course => (course.modules || []).map(module => ({ ...module, courseTitle: course.title })));
+            if (mergedModules.length === 0) {
+                modulesList.innerHTML = '<div class="empty-state-card"><strong>No modules yet.</strong><p>Add modules from the form above.</p></div>';
+            } else {
+                mergedModules.forEach(module => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>${module.title}</strong>
+                            <span class="account-meta">${module.courseTitle}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">${(module.topics || []).length} topics</span>
+                    `;
+                    modulesList.appendChild(row);
+                });
+            }
+        }
+
+        if (tutorialsList) {
+            tutorialsList.innerHTML = '';
+            if (this.videoTutorials.length === 0) {
+                tutorialsList.innerHTML = '<div class="empty-state-card"><strong>No tutorials yet.</strong><p>Publish tutorials to show them on everyone’s dashboard.</p></div>';
+            } else {
+                this.videoTutorials.forEach(video => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>📹 ${video.title}</strong>
+                            <span class="account-meta">${video.module_name} • ${video.topic_name}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">Live</span>
+                    `;
+                    tutorialsList.appendChild(row);
+                });
+            }
+        }
+
+        if (resourcesList) {
+            resourcesList.innerHTML = '';
+            if (this.documentsRegistry.length === 0) {
+                resourcesList.innerHTML = '<div class="empty-state-card"><strong>No resources yet.</strong><p>Share notes, slides, or links from the panel above.</p></div>';
+            } else {
+                this.documentsRegistry.forEach(doc => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>📄 ${doc.title}</strong>
+                            <span class="account-meta">${doc.content.substring(0, 50)}${doc.content.length > 50 ? '…' : ''}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">${doc.type || 'notes'}</span>
+                    `;
+                    resourcesList.appendChild(row);
+                });
+            }
+        }
+
+        if (studyList) {
+            studyList.innerHTML = '';
+            if (this.studyHubItems.length === 0) {
+                studyList.innerHTML = '<div class="empty-state-card"><strong>No study hub cards yet.</strong><p>Publish study cards to show them in the assistant view.</p></div>';
+            } else {
+                this.studyHubItems.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>${item.title}</strong>
+                            <span class="account-meta">${item.summary}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">Live</span>
+                    `;
+                    studyList.appendChild(row);
+                });
+            }
+        }
+
+        if (revisionList) {
+            revisionList.innerHTML = '';
+            if (this.revisionItems.length === 0) {
+                revisionList.innerHTML = '<div class="empty-state-card"><strong>No revision prompts yet.</strong><p>Publish revision challenges for learners to practice.</p></div>';
+            } else {
+                this.revisionItems.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'admin-account-row';
+                    row.innerHTML = `
+                        <div class="account-info">
+                            <strong>${item.prompt}</strong>
+                            <span class="account-meta">${item.answer}</span>
+                        </div>
+                        <span class="badge badge-success" style="font-size:10px;">Live</span>
+                    `;
+                    revisionList.appendChild(row);
+                });
+            }
         }
     }
 
@@ -1005,9 +1393,9 @@ class EduMentorSimulator {
 
         // Save chat log to Supabase via backend POST
         try {
-            fetch('/api/save_chat', {
+            fetch(this.getApiUrl('/api/save_chat'), {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: this.getAuthHeaders(true),
                 body: JSON.stringify({
                     user_id: this.currentUser.username,
                     question: val,
@@ -1072,53 +1460,50 @@ class EduMentorSimulator {
         aiBubble.className = 'message-bubble ai';
 
         const q = query.toLowerCase();
-        let answerMarkdown = '';
+        let title = 'Study support';
+        let summary = 'Here is a clear breakdown of the topic you asked about.';
+        let points = [];
+        let quickActions = [];
         let matchedSources = [];
 
         if (q.includes('normal') || q.includes('database') || q.includes('1nf') || q.includes('3nf')) {
             matchedSources = ['Syllabus_CS301.pdf', 'Lecture_Notes_DB_Normalization.pdf'];
-            answerMarkdown = `
-                <h3>Database Normalization Guide</h3>
-                <p>Database Normalization is the formal process of structuring a relational schema to minimize data redundancy and prevent data anomalies.</p>
-                
-                <strong>Step-by-Step Normal Forms:</strong>
-                <ul>
-                    <li><strong>1NF:</strong> Eliminates duplicate attributes and forces all fields to have atomic values.</li>
-                    <li><strong>2NF:</strong> Removes partial dependencies. No non-prime attribute is dependent on any proper subset of any candidate key.</li>
-                    <li><strong>3NF:</strong> Eliminates transitive functional dependencies. Every non-prime attribute is non-transitively dependent on every candidate key.</li>
-                </ul>
-
-                <pre><code>// Example schema in 3NF
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100) UNIQUE
-);</code></pre>
-                
-                <p><strong>Related Topics:</strong> Boyce-Codd Normal Form (BCNF), Multi-valued dependencies, Cosine distance similarity metrics.</p>
-            `;
+            title = 'Database normalization guide';
+            summary = 'A structured recap of the core rules and why they matter in relational design.';
+            points = [
+                ['1NF', 'Keep each field atomic and remove repeating groups.'],
+                ['2NF', 'Eliminate partial dependencies so non-key columns depend on the whole key.'],
+                ['3NF', 'Remove transitive dependencies so each fact is stored once in the right place.']
+            ];
+            quickActions = ['Review the schema example', 'Ask for a 3NF practice quiz'];
         } else if (q.includes('tcp') || q.includes('udp') || q.includes('network')) {
             matchedSources = ['Networking_TCP_vs_UDP.pdf', 'Exam_PastPaper_2024.pdf'];
-            answerMarkdown = `
-                <h3>TCP vs UDP Protocol Breakdown</h3>
-                <p>Both are critical transport layer protocols used inside packet routing networks, but they solve different problems.</p>
-                
-                <p><strong>TCP (Transmission Control Protocol):</strong></p>
-                <ul>
-                    <li><strong>Connection-Oriented:</strong> Requires three-way handshake before exchange (SYN, SYN-ACK, ACK).</li>
-                    <li><strong>Reliability:</strong> Resends lost packets, tracks order numbers, performs flow congestion checks.</li>
-                </ul>
-
-                <p><strong>UDP (User Datagram Protocol):</strong></p>
-                <ul>
-                    <li><strong>Connectionless:</strong> Sends packet stream without any handshake handshake checks.</li>
-                    <li><strong>Performance:</strong> Lightweight, low latency overhead, ideal for gaming and streaming.</li>
-                </ul>
-
-                <p><strong>Related Topics:</strong> DNS resolution, TCP sliding window, Socket multiplexing.</p>
-            `;
+            title = 'TCP vs UDP breakdown';
+            summary = 'A simple comparison of reliability, speed, and the best use cases for each protocol.';
+            points = [
+                ['TCP', 'Reliable and ordered, ideal for file transfers and web traffic.'],
+                ['UDP', 'Low-overhead and fast, ideal for live streams and gaming.'],
+                ['Best practice', 'Choose TCP when accuracy matters most and UDP when latency matters more.']
+            ];
+            quickActions = ['Compare TCP and UDP with examples', 'Turn this into a revision sheet'];
         } else {
-            answerMarkdown = `<p>This topic is not available in your current course materials. Please upload relevant notes or consult your lecturer.</p>`;
+            title = 'Course material support';
+            summary = 'This topic is not yet covered by the published course content. The admin can add matching resources to improve the answer.';
+            points = [
+                ['Publish new notes', 'Ask the admin to release syllabus notes or sample questions.'],
+                ['Ask for a recap', 'Request a short revision summary until the right material is available.']
+            ];
+            quickActions = ['Ask for a study checklist', 'Request a revision summary'];
+        }
+
+        const adminSupport = [];
+        if (this.studyHubItems.length > 0) {
+            const item = this.studyHubItems[0];
+            adminSupport.push(`<div class="ai-response-support-item"><strong>${this.escapeHtml(item.title)}</strong><span>${this.escapeHtml(item.summary)}</span></div>`);
+        }
+        if (this.revisionItems.length > 0) {
+            const item = this.revisionItems[0];
+            adminSupport.push(`<div class="ai-response-support-item"><strong>${this.escapeHtml(item.prompt)}</strong><span>${this.escapeHtml(item.answer)}</span></div>`);
         }
 
         aiBubble.innerHTML = `
@@ -1131,13 +1516,39 @@ CREATE TABLE users (
                 </div>
             </div>
             <div class="message-content">
-                ${answerMarkdown}
-                ${matchedSources.length > 0 ? `
-                    <div class="ai-sources-ref">
-                        <strong>Sourced from Kwekwe Poly materials:</strong>
-                        ${matchedSources.map(s => `<span class="source-tag">📄 ${s}</span>`).join('')}
+                <div class="ai-response-shell">
+                    <div class="ai-response-hero">
+                        <div class="ai-response-badge">✨ Structured answer</div>
+                        <h3>${this.escapeHtml(title)}</h3>
+                        <p>${this.escapeHtml(summary)}</p>
                     </div>
-                ` : ''}
+                    <div class="ai-response-section">
+                        <div class="ai-response-section-title">Key points</div>
+                        <ul class="ai-response-list">
+                            ${points.map(([label, detail]) => `<li><strong>${this.escapeHtml(label)}:</strong> ${this.escapeHtml(detail)}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="ai-response-section">
+                        <div class="ai-response-section-title">Suggested next steps</div>
+                        <div class="ai-response-actions">
+                            ${quickActions.map(action => `<button class="ai-response-action" onclick="edumentor.prefillAndGoToChat('${this.escapeHtml(action).replace(/'/g, "\\'")}')">${this.escapeHtml(action)}</button>`).join('')}
+                        </div>
+                    </div>
+                    ${matchedSources.length > 0 ? `
+                        <div class="ai-response-section">
+                            <div class="ai-response-section-title">Source materials</div>
+                            <div class="ai-response-actions">
+                                ${matchedSources.map(source => `<span class="source-tag">📄 ${this.escapeHtml(source)}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${adminSupport.length > 0 ? `
+                        <div class="ai-response-section">
+                            <div class="ai-response-section-title">Admin published support</div>
+                            ${adminSupport.join('')}
+                        </div>
+                    ` : ''}
+                </div>
             </div>
         `;
         box.appendChild(aiBubble);
@@ -1171,6 +1582,7 @@ CREATE TABLE users (
         document.getElementById('admin-add-dept-head').value = '';
 
         this.playHapticSuccess();
+        this.persistState();
         this.renderAdminSubTab();
         this.showToast(`Department ${nameVal} added successfully!`);
     }
@@ -1192,6 +1604,7 @@ CREATE TABLE users (
         document.getElementById('admin-add-email').value = '';
 
         this.playHapticSuccess();
+        this.persistState();
         this.renderAdminSubTab();
         this.showToast(`Provisioned account for ${nameVal}`);
     }
@@ -1218,6 +1631,7 @@ CREATE TABLE users (
 
             this.videoTutorials.unshift(newVideo);
             this.playHapticSuccess();
+            this.persistState();
             this.showToast(`Published tutorial: ${title}`);
             this.addNotification(`📹 New video tutorial released: "${title}" (${module_name})`);
             
@@ -1229,9 +1643,9 @@ CREATE TABLE users (
             this.renderAllViews();
 
             try {
-                await fetch('/api/video_tutorials', {
+                await fetch(this.getApiUrl('/api/video_tutorials'), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: this.getAuthHeaders(true),
                     body: JSON.stringify(newVideo)
                 });
             } catch (err) {

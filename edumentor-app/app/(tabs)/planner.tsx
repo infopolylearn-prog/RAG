@@ -138,9 +138,9 @@ export default function PlannerScreen() {
 
       <Card style={styles.cardHighlight}>
         <Card.Content>
-          <Text style={styles.tag}>🚨 UPCOMING EXAM</Text>
-          <Text style={styles.examTitle}>Database Normalization Quiz</Text>
-          <Text style={styles.countdown}>Term deadline: 4 days remaining</Text>
+          <Text style={styles.tag}>� TODAY</Text>
+          <Text style={styles.examTitle}>Keep your study plan moving</Text>
+          <Text style={styles.countdown}>Use your planner to track the work that matters most.</Text>
         </Card.Content>
       </Card>
 
@@ -394,5 +394,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: 'center',
     paddingVertical: 16
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12
   }
 });

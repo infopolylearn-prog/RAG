@@ -1,36 +1,35 @@
 const { supabase } = require('../config/supabase');
+const { getCourses, getTutorials } = require('../services/adminContentStore');
+const { getTasks } = require('../services/plannerStore');
 
 async function getStudentDashboard(req, res, next) {
     try {
         const role = req.user?.role || 'Student';
+        const courses = getCourses();
+        const tutorials = getTutorials();
+        const tasks = getTasks(req.user?.id || 'default');
+        const completedTasks = tasks.filter(task => task.checked).length;
+
         if (role === 'Lecturer' || role === 'Admin') {
             return res.json({
                 role,
-                activeLecturesCount: 3,
-                studentEngagement: 92,
-                releasedDocsCount: 4,
-                recommendedTopics: [
-                    'Assignment Review',
-                    'Course Delivery',
-                    'Assessment Planning'
-                ]
+                activeLecturesCount: courses.length,
+                studentEngagement: Math.min(100, 40 + tutorials.length * 8),
+                releasedDocsCount: courses.reduce((sum, item) => sum + item.modules.length, 0),
+                recommendedTopics: tutorials.slice(0, 3).map(item => item.topic_name || item.module_name || item.title) || []
             });
         }
 
         res.json({
             role,
-            streakDays: 5,
-            activeCoursesCount: 2,
-            queriesCount: 12,
-            recommendedTopics: [
-                'Relational Schemas',
-                '3NF Normalization',
-                'TCP vs UDP Handshake'
-            ],
+            streakDays: completedTasks,
+            activeCoursesCount: courses.length,
+            queriesCount: Math.max(0, tutorials.length * 2),
+            recommendedTopics: tutorials.slice(0, 3).map(item => item.topic_name || item.module_name || item.title) || [],
             upcomingExam: {
-                title: 'CS301: Relational Schema & Normalization Exam',
-                date: 'July 21, 2026',
-                countdown: '4 Days Left'
+                title: courses[0]?.title ? `${courses[0].title} Revision Sprint` : 'Upcoming end-of-module test',
+                date: 'TBD',
+                countdown: courses.length > 0 ? `${courses.length * 2} days remaining` : 'Add a course to see deadlines'
             }
         });
     } catch (err) {

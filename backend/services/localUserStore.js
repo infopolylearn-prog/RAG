@@ -8,6 +8,13 @@ const profilesByUserId = new Map();
 
 const seedUsers = [
     {
+        email: 'joshwebsinfo@gmail.com',
+        password: 'joshua#$#$',
+        full_name: 'Joshua Webs Administrator',
+        role: 'Admin',
+        studentNo: 'KP-ADMIN-001'
+    },
+    {
         email: 'joshua@gmail.com',
         password: 'joshua#$#$',
         full_name: 'Joshua Mujakari',

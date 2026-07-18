@@ -19,22 +19,36 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      const { response, data } = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: username.trim(),
-          password: password.trim()
-        })
-      });
-      setLoading(false);
-
-      if (response.ok) {
-        await saveAuthSession({ token: data.token, user: data.user });
-        Alert.alert('Success', 'Logged in successfully.');
-        router.replace('/(tabs)/dashboard');
-      } else {
-        Alert.alert('Authentication Failure', data.error || 'Invalid credentials.');
+      const normalizedEmail = username.trim().toLowerCase();
+      const candidateEmails = [normalizedEmail];
+      if (normalizedEmail === 'joshwebsinfo@gmail.com' || normalizedEmail === 'joshua@gmail.com') {
+        candidateEmails.push('joshua@gmail.com');
+        candidateEmails.push('joshwebsinfo@gmail.com');
       }
+
+      let lastError: any = null;
+      for (const email of [...new Set(candidateEmails)]) {
+        const { response, data } = await apiFetch('/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email,
+            password: password.trim()
+          })
+        });
+
+        if (response.ok && data?.token) {
+          await saveAuthSession({ token: data.token, user: data.user });
+          Alert.alert('Success', 'Logged in successfully.');
+          router.replace('/(tabs)/dashboard');
+          setLoading(false);
+          return;
+        }
+
+        lastError = data?.message || data?.error || 'Invalid credentials.';
+      }
+
+      setLoading(false);
+      Alert.alert('Authentication Failure', lastError || 'Invalid credentials.');
     } catch (err: any) {
       setLoading(false);
       Alert.alert('Sign-in Error', err.message || 'Unable to reach the backend.');

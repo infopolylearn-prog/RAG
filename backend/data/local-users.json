@@ -23,6 +23,14 @@
       "full_name": "Joshua Mujakari",
       "role": "Admin",
       "studentNo": "KP-ADMIN-001"
+    },
+    {
+      "id": "local-08908128d0fa",
+      "email": "joshwebsinfo@gmail.com",
+      "password": "joshua#$#$",
+      "full_name": "Joshua Webs Administrator",
+      "role": "Admin",
+      "studentNo": "KP-ADMIN-001"
     }
   ],
   "profiles": [
@@ -48,6 +56,15 @@
       "user_id": "local-4681ace816ad",
       "full_name": "Joshua Mujakari",
       "email": "joshua@gmail.com",
+      "course": "Information Technology",
+      "year_of_study": "2026",
+      "role": "Admin",
+      "student_no": "KP-ADMIN-001"
+    },
+    {
+      "user_id": "local-08908128d0fa",
+      "full_name": "Joshua Webs Administrator",
+      "email": "joshwebsinfo@gmail.com",
       "course": "Information Technology",
       "year_of_study": "2026",
       "role": "Admin",

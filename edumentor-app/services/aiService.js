@@ -37,3 +37,4 @@ export async function askAI(message, subject = 'General', context = '') {
     success: data.success ?? true
   };
 }
+

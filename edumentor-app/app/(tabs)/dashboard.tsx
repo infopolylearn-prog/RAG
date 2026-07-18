@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Linking } from 'react-native';
 import { Text, Card, ProgressBar, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { getAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 interface VideoTutorial {
   id: string | number;
@@ -15,10 +16,20 @@ interface VideoTutorial {
 export default function DashboardScreen() {
   const router = useRouter();
   const [tutorials, setTutorials] = useState<VideoTutorial[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState<any>({
+    streakDays: 0,
+    activeCoursesCount: 0,
+    queriesCount: 0,
+    recommendedTopics: [],
+    upcomingExam: null
+  });
   const [userRole, setUserRole] = useState('Student');
 
   useEffect(() => {
+    fetchDashboard();
     fetchTutorials();
+    fetchCourses();
     loadUserRole();
   }, []);
 
@@ -27,37 +38,45 @@ export default function DashboardScreen() {
     setUserRole((session?.user?.role || 'Student').toString());
   };
 
-  const fetchTutorials = async () => {
+  const fetchDashboard = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
     try {
-      // Connect to local server IP or fallback list
-      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/resources');
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) {
-          setTutorials(data);
-          return;
-        }
+      const { response, data } = await apiFetch('/api/dashboard/student', {}, session.token);
+      if (response.ok) {
+        setDashboardMetrics(data);
       }
     } catch (err) {
-      // Fallback fallback lists if server is unreachable
+      // keep default dashboard metrics
     }
-    // Hardcode polished default fallback tutorials
-    setTutorials([
-      {
-        id: 1,
-        title: 'Database Systems Crash Course',
-        module_name: 'Module 1: Relational Algebra',
-        topic_name: '1.2 Schema Design & Normalization Rules',
-        video_url: 'https://www.youtube.com/watch?v=KwekwePolyCS301'
-      },
-      {
-        id: 2,
-        title: 'SQL JOINs and Subqueries Demystified',
-        module_name: 'Module 3: Advanced SQL',
-        topic_name: 'Relational JOIN types',
-        video_url: 'https://www.youtube.com/watch?v=CS301JOINs'
+  };
+
+  const fetchCourses = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
+    try {
+      const { response, data } = await apiFetch('/api/admin/courses', {}, session.token);
+      if (response.ok && Array.isArray(data)) {
+        setCourses(data);
       }
-    ]);
+    } catch (err) {
+      setCourses([]);
+    }
+  };
+
+  const fetchTutorials = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
+    try {
+      const { response, data } = await apiFetch('/api/admin/tutorials', {}, session.token);
+      if (response.ok && Array.isArray(data)) {
+        setTutorials(data);
+        return;
+      }
+    } catch (err) {
+      setTutorials([]);
+    }
   };
 
   const watchVideo = (url: string) => {
@@ -81,7 +100,9 @@ export default function DashboardScreen() {
           <Text style={styles.role}>{userRole === 'Lecturer' ? 'Lecturer Workspace' : 'Student Workspace'}</Text>
         </View>
         <View style={styles.streak}>
-          <Text style={styles.streakText}>🔥 5 Days</Text>
+          <Text style={styles.streakText}>
+            🔥 {dashboardMetrics.streakDays > 0 ? `${dashboardMetrics.streakDays} Days` : 'Start your first study streak'}
+          </Text>
         </View>
       </View>
 
@@ -105,42 +126,61 @@ export default function DashboardScreen() {
         <Text style={styles.adminBadge}>Admin Verified</Text>
       </View>
 
-      {tutorials.map((t) => (
-        <Card key={t.id} style={styles.tutorialCard}>
-          <Card.Content style={styles.tutorialContent}>
-            <View style={styles.playIconContainer}>
-              <Text style={styles.playIcon}>▶</Text>
-            </View>
-            <View style={styles.tutorialDetails}>
-              <Text style={styles.moduleTag}>{t.module_name}</Text>
-              <Text style={styles.tutorialTitle}>{t.title}</Text>
-              <Text style={styles.topicLabel}>Topic: {t.topic_name}</Text>
-            </View>
-            <Button
-              mode="contained"
-              compact
-              style={styles.watchBtn}
-              labelStyle={styles.watchBtnLabel}
-              onPress={() => watchVideo(t.video_url)}
-            >
-              Watch
-            </Button>
+      {tutorials.length === 0 ? (
+        <Card style={[styles.card, styles.emptyStateCard]}>
+          <Card.Content>
+            <Text style={styles.emptyStateTitle}>No admin tutorials available</Text>
+            <Text style={styles.emptyStateText}>The admin can publish course tutorials and video lessons for the study hub.</Text>
           </Card.Content>
         </Card>
-      ))}
+      ) : (
+        tutorials.map((t) => (
+          <Card key={t.id} style={styles.tutorialCard}>
+            <Card.Content style={styles.tutorialContent}>
+              <View style={styles.playIconContainer}>
+                <Text style={styles.playIcon}>▶</Text>
+              </View>
+              <View style={styles.tutorialDetails}>
+                <Text style={styles.moduleTag}>{t.module_name}</Text>
+                <Text style={styles.tutorialTitle}>{t.title}</Text>
+                <Text style={styles.topicLabel}>Topic: {t.topic_name}</Text>
+              </View>
+              <Button
+                mode="contained"
+                compact
+                style={styles.watchBtn}
+                labelStyle={styles.watchBtnLabel}
+                onPress={() => watchVideo(t.video_url)}
+              >
+                Watch
+              </Button>
+            </Card.Content>
+          </Card>
+        ))
+      )}
 
       <View style={styles.sectionTitle}>
         <Text style={styles.sectionText}>My Active Courses</Text>
       </View>
 
-      <Card style={styles.card}>
-        <Card.Content>
-          <Text style={styles.courseCode}>CS301</Text>
-          <Text style={styles.courseTitle}>Database Systems</Text>
-          <ProgressBar progress={0.75} color="#4f46e5" style={styles.progress} />
-          <Text style={styles.percent}>75% Completed</Text>
-        </Card.Content>
-      </Card>
+      {courses.length === 0 ? (
+        <Card style={[styles.card, styles.emptyStateCard]}>
+          <Card.Content>
+            <Text style={styles.emptyStateTitle}>No admin courses published yet</Text>
+            <Text style={styles.emptyStateText}>Courses will appear here once the administrator publishes syllabi and modules.</Text>
+          </Card.Content>
+        </Card>
+      ) : (
+        courses.map(course => (
+          <Card key={course.id} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.courseCode}>{course.title}</Text>
+              <Text style={styles.courseTitle}>{course.description || 'Admin published course details'}</Text>
+              <Text style={styles.percent}>{course.modules.length} module(s) published</Text>
+            </Card.Content>
+          </Card>
+        ))
+      )}
     </ScrollView>
   );
 }
@@ -337,5 +377,62 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     fontSize: 11,
     marginTop: 6
+  },
+  metricsCard: {
+    backgroundColor: '#1e293b',
+    borderColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderRadius: 14,
+    marginBottom: 14
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 10
+  },
+  metricTile: {
+    flex: 1,
+    backgroundColor: 'rgba(79, 70, 229, 0.12)',
+    borderRadius: 12,
+    padding: 12
+  },
+  metricLabel: {
+    color: '#94a3b8',
+    fontSize: 10,
+    marginBottom: 4
+  },
+  metricValue: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  metricNote: {
+    color: '#c7d2fe',
+    fontSize: 11,
+    marginBottom: 12
+  },
+  adminPanelBtn: {
+    borderColor: '#4f46e5',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginTop: 4
+  },
+  emptyStateCard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderRadius: 14,
+    marginBottom: 12
+  },
+  emptyStateTitle: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 14,
+    marginBottom: 4
+  },
+  emptyStateText: {
+    color: '#94a3b8',
+    fontSize: 12
   }
 });
