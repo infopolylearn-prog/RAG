@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, RadioButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { saveAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -21,9 +22,8 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/auth/register', {
+      const { response, data } = await apiFetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: username.trim(),
           password: password.trim(),
@@ -32,11 +32,9 @@ export default function RegisterScreen() {
           studentNo: role === 'student' ? studentNo.trim() : undefined
         })
       });
-
-      const data = await res.json();
       setLoading(false);
 
-      if (res.ok) {
+      if (response.ok) {
         await saveAuthSession({ token: data.token, user: data.user });
         Alert.alert('Success', 'Your account was created successfully.');
         router.replace('/(tabs)/dashboard');

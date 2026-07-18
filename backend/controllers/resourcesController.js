@@ -34,15 +34,20 @@ async function uploadResource(req, res, next) {
 
 async function listResources(req, res, next) {
     try {
-        const { data, error } = await supabase
-            .from('study_materials')
-            .select('*')
-            .order('created_at', { ascending: false });
+        if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.includes('placeholder')) {
+            const { data, error } = await supabase
+                .from('study_materials')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        res.json(data || []);
+            if (!error) {
+                return res.json(data || []);
+            }
+        }
+
+        res.json([]);
     } catch (err) {
-        next(err);
+        res.json([]);
     }
 }
 

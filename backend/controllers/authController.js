@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/supabase');
 const { JWT_SECRET } = require('../middleware/auth');
-const { saveUser, verifyCredentials, getProfile } = require('../services/localUserStore');
+const { saveUser, verifyCredentials, getProfile, upsertProfile } = require('../services/localUserStore');
 
 async function register(req, res, next) {
     try {
@@ -54,6 +54,20 @@ async function register(req, res, next) {
             full_name,
             studentNo: studentNo || 'KP-2026-993F'
         };
+
+        if (!process.env.SUPABASE_URL || process.env.SUPABASE_URL.includes('placeholder')) {
+            const localProfile = getProfile(userId);
+            if (!localProfile) {
+                upsertProfile(userId, {
+                    full_name: payload.full_name,
+                    email,
+                    course: 'Information Technology',
+                    year_of_study: '2026',
+                    role: finalRole,
+                    student_no: payload.studentNo
+                });
+            }
+        }
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 
@@ -122,6 +136,17 @@ async function login(req, res, next) {
             full_name,
             studentNo
         };
+
+        if (!process.env.SUPABASE_URL || process.env.SUPABASE_URL.includes('placeholder')) {
+            upsertProfile(userId, {
+                full_name,
+                email,
+                course: 'Information Technology',
+                year_of_study: '2026',
+                role,
+                student_no: studentNo
+            });
+        }
 
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 

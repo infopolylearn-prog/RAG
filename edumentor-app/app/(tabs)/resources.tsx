@@ -1,19 +1,47 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, Linking, ActivityIndicator } from 'react-native';
 import { Text, TextInput, Card, Button } from 'react-native-paper';
+import { getAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 export default function ResourcesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [resources, setResources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const mockResources = [
-    { title: 'Syllabus_CS301.pdf', type: 'Syllabus', size: '254 KB' },
-    { title: 'Lecture_Notes_DB_Normalization.pdf', type: 'Notes', size: '1.2 MB' },
-    { title: 'Networking_TCP_vs_UDP.pdf', type: 'Notes', size: '920 KB' },
-    { title: 'Exam_PastPaper_2024.pdf', type: 'Past Paper', size: '412 KB' }
-  ];
+  useEffect(() => {
+    loadResources();
+  }, []);
 
-  const filtered = mockResources.filter(res =>
-    res.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const loadResources = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
+    setLoading(true);
+    try {
+      const { response, data } = await apiFetch('/api/resources', {}, session.token);
+      if (response.ok && Array.isArray(data)) {
+        setResources(data);
+      }
+    } catch (err) {
+      setResources([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpen = async (resource: any) => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
+    const url = resource.file_url || resource.download_url || resource.url;
+    if (url) {
+      await Linking.openURL(url);
+    }
+  };
+
+  const filtered = resources.filter(res =>
+    (res.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -33,18 +61,25 @@ export default function ResourcesScreen() {
       />
 
       <View style={styles.list}>
-        {filtered.map((item, idx) => (
-          <Card key={idx} style={styles.card}>
+        {loading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator animating color="#4f46e5" />
+            <Text style={styles.docMeta}>Loading resources...</Text>
+          </View>
+        ) : filtered.length === 0 ? (
+          <Text style={styles.docMeta}>No resources are available yet.</Text>
+        ) : filtered.map((item, idx) => (
+          <Card key={item.id || idx} style={styles.card}>
             <Card.Content style={styles.cardRow}>
               <View style={styles.iconBox}>
                 <Text style={styles.icon}>📄</Text>
               </View>
               <View style={styles.info}>
-                <Text style={styles.docTitle}>{item.title}</Text>
-                <Text style={styles.docMeta}>{item.type} • {item.size}</Text>
+                <Text style={styles.docTitle}>{item.title || 'Study material'}</Text>
+                <Text style={styles.docMeta}>{item.subject || 'General'} • {item.course || 'IT'}</Text>
               </View>
-              <Button mode="outlined" style={styles.downloadBtn} labelStyle={{ fontSize: 10, paddingHorizontal: 0 }}>
-                Download
+              <Button mode="outlined" style={styles.downloadBtn} labelStyle={{ fontSize: 10, paddingHorizontal: 0 }} onPress={() => handleOpen(item)}>
+                Open
               </Button>
             </Card.Content>
           </Card>

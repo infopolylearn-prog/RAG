@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { Text, TextInput, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { saveAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,20 +19,16 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // Connect to the deployed Render backend
-      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/auth/login', {
+      const { response, data } = await apiFetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: username.trim(),
           password: password.trim()
         })
       });
-
-      const data = await res.json();
       setLoading(false);
 
-      if (res.ok) {
+      if (response.ok) {
         await saveAuthSession({ token: data.token, user: data.user });
         Alert.alert('Success', 'Logged in successfully.');
         router.replace('/(tabs)/dashboard');

@@ -10,6 +10,7 @@ const resourcesRoutes = require('./routes/resources');
 const profileRoutes = require('./routes/profile');
 const dashboardRoutes = require('./routes/dashboard');
 const notificationsRoutes = require('./routes/notifications');
+const plannerRoutes = require('./routes/planner');
 
 const { errorHandler } = require('./middleware/error');
 
@@ -42,6 +43,7 @@ app.use('/api/resources', resourcesRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/planner', plannerRoutes);
 
 // Root endpoint for deployment verification
 app.get('/', (req, res) => {

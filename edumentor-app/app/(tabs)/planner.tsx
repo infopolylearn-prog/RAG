@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Text, Card, Checkbox, TextInput, Button, IconButton } from 'react-native-paper';
+import { getAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 type Task = {
   id: string | number;
@@ -13,53 +15,54 @@ export default function PlannerScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskText, setNewTaskText] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'High' | 'Medium' | 'Low'>('Medium');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchTasks();
   }, []);
 
   const fetchTasks = async () => {
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
+    setLoading(true);
     try {
-      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/dashboard/student');
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.length > 0) {
-          const loaded: Task[] = data.map((item: any) => ({
-            id: item.id,
-            text: item.task_text,
-            checked: item.completed == 1 || item.completed === true,
-            priority: (item.priority?.charAt(0).toUpperCase() + item.priority?.slice(1)) || 'Medium'
-          }));
-          setTasks(loaded);
-          return;
-        }
+      const { response, data } = await apiFetch('/api/planner/tasks', {}, session.token);
+      if (response.ok && Array.isArray(data)) {
+        const loaded: Task[] = data.map((item: any) => ({
+          id: item.id,
+          text: item.text || item.task_text || 'Untitled task',
+          checked: Boolean(item.checked ?? item.completed),
+          priority: (item.priority?.charAt(0).toUpperCase() + item.priority?.slice(1)) || 'Medium'
+        }));
+        setTasks(loaded);
+      } else {
+        setTasks([]);
       }
     } catch (err) {
-      // Offline fallback
+      setTasks([]);
+    } finally {
+      setLoading(false);
     }
-    // Set seed list defaults
-    setTasks([
-      { id: 1, text: 'Read database normalization notes', checked: true, priority: 'High' },
-      { id: 2, text: 'Review past midterm exams', checked: false, priority: 'Medium' },
-      { id: 3, text: 'Consult EduMentor AI about TCP handshakes', checked: false, priority: 'Low' }
-    ]);
   };
 
   const toggleCheck = async (id: string | number) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
     const updated = tasks.map(t => t.id === id ? { ...t, checked: !t.checked } : t);
     setTasks(updated);
 
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-      try {
-        await fetch(`https://edumentor-backend-fbe9.onrender.com/api/dashboard/student`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ completed: !task.checked ? 1 : 0 })
-        });
-      } catch (err) {
-        // Safe fail
-      }
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
+    try {
+      await apiFetch(`/api/planner/tasks/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ checked: !task.checked })
+      }, session.token);
+    } catch (err) {
+      // Keep UI optimistic; the backend call is best-effort
     }
   };
 
@@ -77,17 +80,19 @@ export default function PlannerScreen() {
     setTasks(prev => [newTask, ...prev]);
     setNewTaskText('');
 
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
     try {
-      await fetch('https://edumentor-backend-fbe9.onrender.com/api/dashboard/student', {
+      await apiFetch('/api/planner/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: 'student@kwekwe.ac.zw',
-          task_text: newTask.text,
+          id: newTask.id,
+          text: newTask.text,
           priority: newTaskPriority.toLowerCase(),
-          completed: 0
+          checked: false
         })
-      });
+      }, session.token);
     } catch (err) {
       // Safe offline
     }
@@ -95,10 +100,11 @@ export default function PlannerScreen() {
 
   const handleDeleteTask = async (id: string | number) => {
     setTasks(prev => prev.filter(t => t.id !== id));
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
     try {
-      await fetch('https://edumentor-backend-fbe9.onrender.com/api/dashboard/student', {
-        method: 'DELETE'
-      });
+      await apiFetch(`/api/planner/tasks/${id}`, { method: 'DELETE' }, session.token);
     } catch (err) {
       // Safe fail
     }
@@ -107,11 +113,12 @@ export default function PlannerScreen() {
   const handleClearCompleted = async () => {
     const completed = tasks.filter(t => t.checked);
     setTasks(prev => prev.filter(t => !t.checked));
+    const session = await getAuthSession();
+    if (!session?.token) return;
+
     for (const t of completed) {
       try {
-        await fetch(`https://edumentor-backend-fbe9.onrender.com/api/dashboard/student`, {
-          method: 'DELETE'
-        });
+        await apiFetch(`/api/planner/tasks/${t.id}`, { method: 'DELETE' }, session.token);
       } catch (e) {}
     }
   };
@@ -209,7 +216,12 @@ export default function PlannerScreen() {
       
       <Card style={styles.card}>
         <Card.Content style={{ paddingVertical: 8 }}>
-          {tasks.length === 0 ? (
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator animating color="#4f46e5" />
+              <Text style={styles.emptyText}>Syncing tasks...</Text>
+            </View>
+          ) : tasks.length === 0 ? (
             <Text style={styles.emptyText}>No goals set for today. Add one above!</Text>
           ) : (
             tasks.map(t => (

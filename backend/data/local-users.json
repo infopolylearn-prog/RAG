@@ -7,6 +7,22 @@
       "full_name": "Persist User",
       "role": "Student",
       "studentNo": "KP-PERSIST-001"
+    },
+    {
+      "id": "local-06e7c9b2b7b8",
+      "email": "verifyuser@example.com",
+      "password": "StrongPass123!",
+      "full_name": "Verify User",
+      "role": "Student",
+      "studentNo": "KP-VERIFY-001"
+    },
+    {
+      "id": "local-4681ace816ad",
+      "email": "joshua@gmail.com",
+      "password": "joshua#$#$",
+      "full_name": "Joshua Mujakari",
+      "role": "Admin",
+      "studentNo": "KP-ADMIN-001"
     }
   ],
   "profiles": [
@@ -18,6 +34,24 @@
       "year_of_study": "2026",
       "role": "Student",
       "student_no": "KP-PERSIST-001"
+    },
+    {
+      "user_id": "local-06e7c9b2b7b8",
+      "full_name": "Verify User",
+      "email": "verifyuser@example.com",
+      "course": "Information Technology",
+      "year_of_study": "2026",
+      "role": "Student",
+      "student_no": "KP-VERIFY-001"
+    },
+    {
+      "user_id": "local-4681ace816ad",
+      "full_name": "Joshua Mujakari",
+      "email": "joshua@gmail.com",
+      "course": "Information Technology",
+      "year_of_study": "2026",
+      "role": "Admin",
+      "student_no": "KP-ADMIN-001"
     }
   ]
 }

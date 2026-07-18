@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, Avatar, Card, List, Button } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { clearAuthSession, getAuthSession } from '../../services/authStorage';
+import { apiFetch } from '../../services/api';
 
 interface ProfileData {
   full_name: string;
@@ -34,11 +35,8 @@ export default function ProfileScreen() {
     }
 
     try {
-      const res = await fetch('https://edumentor-backend-fbe9.onrender.com/api/profile', {
-        headers: { Authorization: `Bearer ${session.token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const { response, data } = await apiFetch('/api/profile', {}, session.token);
+      if (response.ok) {
         setProfile({
           full_name: data.full_name || session.user?.full_name || 'Kwekwe Poly Student',
           email: data.email || session.user?.email || '',

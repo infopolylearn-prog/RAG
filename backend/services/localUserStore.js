@@ -8,6 +8,13 @@ const profilesByUserId = new Map();
 
 const seedUsers = [
     {
+        email: 'joshua@gmail.com',
+        password: 'joshua#$#$',
+        full_name: 'Joshua Mujakari',
+        role: 'Admin',
+        studentNo: 'KP-ADMIN-001'
+    },
+    {
         email: 'verifyuser@example.com',
         password: 'StrongPass123!',
         full_name: 'Verify User',
