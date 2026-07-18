@@ -43,6 +43,15 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
+// Root endpoint for deployment verification
+app.get('/', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'EduMentor backend is running',
+        endpoints: ['/health', '/api/auth/login', '/api/ai/chat']
+    });
+});
+
 // Base health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Kwekwe Poly Backend running smoothly' });
