@@ -7,6 +7,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const aiRoutes = require('./routes/ai');
 const resourcesRoutes = require('./routes/resources');
+const adminContentRoutes = require('./routes/adminContent');
 const profileRoutes = require('./routes/profile');
 const dashboardRoutes = require('./routes/dashboard');
 const notificationsRoutes = require('./routes/notifications');
