@@ -76,8 +76,13 @@ async function login(req, res, next) {
         let full_name = email.split('@')[0];
         let studentNo = 'KP-2026-993F';
 
-        // Authenticate strictly against real Supabase Auth if configured
-        if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.includes('placeholder')) {
+        const localUser = verifyCredentials(email, password);
+        if (localUser) {
+            userId = localUser.id;
+            role = localUser.role;
+            full_name = localUser.full_name;
+            studentNo = localUser.studentNo;
+        } else if (process.env.SUPABASE_URL && !process.env.SUPABASE_URL.includes('placeholder')) {
             try {
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
@@ -87,7 +92,6 @@ async function login(req, res, next) {
                 if (error) throw error;
                 userId = data.user?.id || userId;
 
-                // Fetch corresponding profile role dynamically from live database
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role, full_name, student_no')
@@ -101,22 +105,14 @@ async function login(req, res, next) {
                 }
             } catch (authErr) {
                 console.warn('⚠️ Supabase auth unavailable, falling back to local user store:', authErr.message);
-                const localUser = verifyCredentials(email, password);
-                if (!localUser) throw authErr;
-                userId = localUser.id;
-                role = localUser.role;
-                full_name = localUser.full_name;
-                studentNo = localUser.studentNo;
+                const invalidCreds = new Error('Invalid login credentials');
+                invalidCreds.statusCode = 401;
+                throw invalidCreds;
             }
         } else {
-            const localUser = verifyCredentials(email, password);
-            if (!localUser) {
-                throw new Error('Invalid login credentials');
-            }
-            userId = localUser.id;
-            role = localUser.role;
-            full_name = localUser.full_name;
-            studentNo = localUser.studentNo;
+            const invalidCreds = new Error('Invalid login credentials');
+            invalidCreds.statusCode = 401;
+            throw invalidCreds;
         }
 
         const payload = {

@@ -6,6 +6,23 @@ const storageFile = path.join(__dirname, '..', 'data', 'local-users.json');
 const usersByEmail = new Map();
 const profilesByUserId = new Map();
 
+const seedUsers = [
+    {
+        email: 'verifyuser@example.com',
+        password: 'StrongPass123!',
+        full_name: 'Verify User',
+        role: 'Student',
+        studentNo: 'KP-VERIFY-001'
+    },
+    {
+        email: 'persist@example.com',
+        password: 'Pass123!',
+        full_name: 'Persist User',
+        role: 'Student',
+        studentNo: 'KP-PERSIST-001'
+    }
+];
+
 function ensureStorageFile() {
     const dir = path.dirname(storageFile);
     if (!fs.existsSync(dir)) {
@@ -28,6 +45,13 @@ function loadState() {
     } catch (err) {
         console.warn('⚠️ Failed to load local auth store from disk:', err.message);
     }
+
+    seedUsers.forEach(user => {
+        const normalizedEmail = normalizeEmail(user.email);
+        if (!usersByEmail.has(normalizedEmail)) {
+            saveUser(user);
+        }
+    });
 }
 
 function saveState() {
